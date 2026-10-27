@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, MessageCircle, Pencil, Phone, X } from "lucide-react";
-import { useState } from "react";
+import { Check, CreditCard, MessageCircle, Pencil, Phone, Printer, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { StatusNote, useNoteToast } from "@/components/ui/status-note";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -11,9 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CancelOrderDialog, useCanCancelOrders } from "@/components/orders/cancel-order-dialog";
 import { EditBillDialog } from "@/components/orders/edit-bill-dialog";
 import { ReasonDialog } from "@/components/orders/reason-dialog";
+import { CheckoutPanel } from "@/components/pos/checkout-panel";
 import { hasPermission, useCurrentUser } from "@/hooks/use-auth";
 import { useAcceptOrder, useOrder, useRejectOrder } from "@/hooks/use-orders";
+import { usePrintOrderUsb, type PrintJobResult } from "@/hooks/use-print";
+import { ApiError } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
+import { openReceiptPrint } from "@/lib/print";
 import { cn } from "@/lib/utils";
 
 const CANCEL_SOURCE_LABEL = {
@@ -42,9 +46,29 @@ export function OrderDetailDialog({
   const { data: me } = useCurrentUser();
   const canEditRole = hasPermission(me?.user, "orders.edit");
   const canAnswer = hasPermission(me?.user, "orders.accept");
+  const canPayRole = hasPermission(me?.user, "bills.print");
+  const printUsb = usePrintOrderUsb(branchId);
+
+  const [view, setView] = useState<"detail" | "checkout">("detail");
   const [cancelOpen, setCancelOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) setView("detail");
+  }, [open]);
+
+  useEffect(() => {
+    setView("detail");
+  }, [orderId]);
+
+  const onPrinted = (r: PrintJobResult) =>
+    r.unsupportedChars?.length
+      ? toast.warning(
+          `Sent, but ${r.unsupportedChars.join(" ")} cannot be printed by this printer's code page. Use browser print for the full text.`,
+        )
+      : toast.success("Sent to the thermal printer");
+
   const customerName = order?.guestName ?? order?.customer?.name ?? "Walk-in guest";
   const pending = order?.status === "OPEN" && order?.acceptance === "PENDING";
   const canCancel = order?.status === "OPEN" && !pending;
@@ -65,8 +89,8 @@ export function OrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className={cn("max-w-md", view === "checkout" && "max-h-[92dvh] overflow-y-auto")}>
+        <DialogHeader className={view === "checkout" ? "sr-only" : undefined}>
           <DialogTitle className="flex items-center gap-2">
             {order ? `Order #${order.orderNumber}` : "Order details"}
             {order && <ChannelBadge channel={order.channel} />}
@@ -79,6 +103,22 @@ export function OrderDetailDialog({
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-8 rounded-lg" />
             ))}
+          </div>
+        ) : view === "checkout" ? (
+          <div className="flex flex-col">
+            <CheckoutPanel
+              order={order}
+              branchId={branchId}
+              initialCustomer={order.customer}
+              onDone={() => {
+                if (order.status === "PAID" || order.status === "CANCELLED") {
+                  setView("detail");
+                  onOpenChange(false);
+                } else {
+                  setView("detail");
+                }
+              }}
+            />
           </div>
         ) : (
           <div className="flex flex-col gap-4 text-sm">
@@ -193,26 +233,70 @@ export function OrderDetailDialog({
               </p>
             )}
             {order.status === "PAID" && (
-              <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                This bill is paid. To correct it, issue a refund from the Dashboard — paid bills are never edited in place.
-              </p>
+              <div className="flex flex-col gap-2">
+                <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                  This bill is paid. To correct it, issue a refund from the Dashboard — paid bills are never edited in place.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => branchId && openReceiptPrint(order.id, branchId)}
+                  >
+                    <Printer className="mr-1.5 h-4 w-4" /> Print receipt
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    disabled={printUsb.isPending}
+                    onClick={() =>
+                      printUsb.mutate(
+                        { orderId: order.id },
+                        {
+                          onSuccess: onPrinted,
+                          onError: (err) =>
+                            toast.error(
+                              err instanceof ApiError ? err.message : "Could not print to the thermal printer",
+                            ),
+                        },
+                      )
+                    }
+                  >
+                    <Printer className="mr-1.5 h-4 w-4" /> Thermal receipt
+                  </Button>
+                </div>
+              </div>
             )}
             {canCancel && (
-              <div className="flex gap-2">
-                {canEditRole && (
-                  <Button variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
-                    <Pencil className="mr-1.5 h-4 w-4" /> Edit bill
-                  </Button>
-                )}
-                {canCancelRole ? (
-                  <Button variant="destructive" className="flex-1" onClick={() => setCancelOpen(true)}>
-                    <X className="mr-1.5 h-4 w-4" /> Cancel order
+              <div className="flex flex-col gap-2">
+                {canPayRole ? (
+                  <Button
+                    className="h-11 w-full text-base font-semibold shadow-sm"
+                    onClick={() => setView("checkout")}
+                  >
+                    <CreditCard className="mr-2 h-5 w-5" /> Collect payment / Pay bill
                   </Button>
                 ) : (
-                  <p className="flex-1 self-center text-xs text-muted-foreground">
-                    Cancelling needs a manager — ask one to cancel this order.
+                  <p className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                    Taking payment needs a cashier or manager.
                   </p>
                 )}
+                <div className="flex gap-2">
+                  {canEditRole && (
+                    <Button variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
+                      <Pencil className="mr-1.5 h-4 w-4" /> Edit bill
+                    </Button>
+                  )}
+                  {canCancelRole ? (
+                    <Button variant="destructive" className="flex-1" onClick={() => setCancelOpen(true)}>
+                      <X className="mr-1.5 h-4 w-4" /> Cancel order
+                    </Button>
+                  ) : (
+                    <p className="flex-1 self-center text-xs text-muted-foreground">
+                      Cancelling needs a manager — ask one to cancel this order.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
             {order && (
@@ -223,7 +307,7 @@ export function OrderDetailDialog({
                   orderNumber={order.orderNumber}
                   open={cancelOpen}
                   onOpenChange={setCancelOpen}
-                  />
+                />
                 <EditBillDialog branchId={branchId} orderId={order.id} open={editOpen} onOpenChange={setEditOpen} />
                 <ReasonDialog
                   open={declineOpen}
