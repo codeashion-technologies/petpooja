@@ -4,7 +4,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface SyncChange {
@@ -51,21 +51,38 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
   private meta: Map<string, TableMeta> | null = null;
   private timer: NodeJS.Timeout | null = null;
   private running: Promise<unknown> | null = null;
+  private cloudPrisma: PrismaClient | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
     await this.prisma.$queryRawUnsafe('SELECT sync_install_triggers()');
-    const envKey = process.env.SYNC_API_KEY?.trim();
-    if (envKey) {
-      // This process is the central server other devices sync with.
+    const cloudUrl = process.env.CLOUD_DATABASE_URL?.trim();
+    if (cloudUrl) {
       await this.prisma.$executeRawUnsafe(
-        `UPDATE sync_state SET role = 'server', enabled = true, "apiKey" = $1 WHERE id = 1`,
-        envKey,
+        `UPDATE sync_state SET role = 'client', enabled = true, "serverUrl" = 'Central Supabase (Fudiyo)', "apiKey" = 'supabase-direct' WHERE id = 1`,
       );
-      if (!(await this.state()).seeded)
+      const s = await this.state();
+      if (!s.seeded) {
         await this.prisma.$executeRawUnsafe('SELECT sync_seed()');
-      this.log.log('Sync server mode enabled (SYNC_API_KEY set)');
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE sync_state SET seeded = true WHERE id = 1`,
+        );
+      }
+      this.cloudPrisma = new PrismaClient({ datasources: { db: { url: cloudUrl } } });
+      this.log.log('Supabase Direct Cloud Sync initialized (Fudiyo)');
+    } else {
+      const envKey = process.env.SYNC_API_KEY?.trim();
+      if (envKey) {
+        // This process is the central server other devices sync with.
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE sync_state SET role = 'server', enabled = true, "apiKey" = $1 WHERE id = 1`,
+          envKey,
+        );
+        if (!(await this.state()).seeded)
+          await this.prisma.$executeRawUnsafe('SELECT sync_seed()');
+        this.log.log('Sync server mode enabled (SYNC_API_KEY set)');
+      }
     }
     if (process.env.NODE_ENV !== 'test') {
       this.timer = setInterval(
@@ -76,8 +93,9 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     if (this.timer) clearInterval(this.timer);
+    if (this.cloudPrisma) await this.cloudPrisma.$disconnect().catch(() => {});
   }
 
   async state() {
@@ -101,18 +119,19 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
 
   async publicStatus() {
     const s = await this.state();
+    const isCloud = Boolean(process.env.CLOUD_DATABASE_URL?.trim());
     const pending = await this.prisma.$queryRawUnsafe<{ n: bigint }[]>(
       `SELECT count(*) AS n FROM sync_changes WHERE seq > $1`,
       s.lastPushSeq,
     );
     return {
-      enabled: s.enabled,
-      role: s.role,
-      serverUrl: s.serverUrl,
-      hasKey: !!s.apiKey,
+      enabled: isCloud || s.enabled,
+      role: isCloud ? 'client' : s.role,
+      serverUrl: isCloud ? 'Central Supabase (Fudiyo)' : s.serverUrl,
+      hasKey: isCloud || !!s.apiKey,
       lastSyncAt: s.lastSyncAt,
       lastError: s.lastError,
-      pendingChanges: s.role === 'client' ? Number(pending[0].n) : 0,
+      pendingChanges: Number(pending[0].n),
       conflicts: s.conflicts,
     };
   }
@@ -329,6 +348,16 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
   }
 
   async testConnection(serverUrl: string, apiKey: string) {
+    const cloudUrl = process.env.CLOUD_DATABASE_URL?.trim();
+    if (cloudUrl || serverUrl?.includes('Supabase')) {
+      if (!this.cloudPrisma && cloudUrl) {
+        this.cloudPrisma = new PrismaClient({ datasources: { db: { url: cloudUrl } } });
+      }
+      if (this.cloudPrisma) {
+        await this.cloudPrisma.$queryRawUnsafe('SELECT 1');
+      }
+      return { ok: true, schema: 'supabase-cloud' };
+    }
     const r = await this.call<{ ok: boolean; role: string; schema: string }>(
       { serverUrl, apiKey },
       'ping',
@@ -419,8 +448,147 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
     return p;
   }
 
+  private cloudMeta: Map<string, TableMeta> | null = null;
+
+  private async syncWithSupabase(
+    cloudUrl: string,
+    s: { lastPushSeq: bigint; conflicts: unknown[] },
+  ) {
+    if (!this.cloudPrisma) {
+      this.cloudPrisma = new PrismaClient({
+        datasources: { db: { url: cloudUrl } },
+      });
+    }
+
+    // 1. Connectivity test / ping
+    try {
+      await this.cloudPrisma.$queryRawUnsafe('SELECT 1');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.log.warn(`Supabase Cloud unreachable (offline): ${msg}`);
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE sync_state SET "lastError" = $1 WHERE id = 1`,
+        `Offline: Cannot reach Supabase Cloud`,
+      );
+      throw new Error('Supabase Cloud is unreachable. Working in offline mode.');
+    }
+
+    // 2. Fetch pending local changes from sync_changes
+    const rows = await this.prisma.$queryRawUnsafe<
+      {
+        seq: string;
+        tbl: string;
+        pk: Record<string, unknown>;
+        pkKey: string;
+        op: 'U' | 'D';
+        row: Record<string, unknown> | null;
+        ts: Date;
+      }[]
+    >(
+      `SELECT seq::text, tbl, pk, "pkKey", op, row, ts FROM sync_changes WHERE seq > $1 ORDER BY seq LIMIT $2`,
+      s.lastPushSeq,
+      PUSH_PAGE,
+    );
+
+    if (!rows.length) {
+      // No new changes to push, mark healthy & synced
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE sync_state SET "lastSyncAt" = now(), "lastError" = NULL WHERE id = 1`,
+      );
+      return { pulled: 0, pushed: 0, conflicts: 0 };
+    }
+
+    // 3. Table metadata cache for Supabase
+    if (!this.cloudMeta) {
+      const cols = await this.cloudPrisma.$queryRawUnsafe<{ t: string; c: string }[]>(
+        `SELECT c.relname AS t, a.attname AS c FROM pg_class c
+           JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attgenerated = ''
+          WHERE c.relnamespace = 'public'::regnamespace AND c.relkind = 'r'
+          ORDER BY c.relname, a.attnum`,
+      );
+      const pks = await this.cloudPrisma.$queryRawUnsafe<{ t: string; c: string }[]>(
+        `SELECT c.relname AS t, a.attname AS c FROM pg_constraint k
+           JOIN pg_class c ON c.oid = k.conrelid
+           JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = ANY (k.conkey)
+          WHERE k.contype = 'p' AND c.relnamespace = 'public'::regnamespace`,
+      );
+      const meta = new Map<string, TableMeta>();
+      for (const { t, c } of cols) {
+        if (!meta.has(t)) meta.set(t, { pk: [], cols: [] });
+        meta.get(t)!.cols.push(c);
+      }
+      for (const { t, c } of pks) meta.get(t)?.pk.push(c);
+      this.cloudMeta = meta;
+    }
+
+    // 4. Multi-pass upsert/delete to handle Foreign Key dependencies
+    let pending = [...rows];
+    let appliedCount = 0;
+    const maxPasses = 8;
+    const conflicts: { tbl: string; pk: string; error: string }[] = [];
+
+    for (let pass = 0; pass < maxPasses && pending.length > 0; pass++) {
+      const retry: typeof rows = [];
+      for (const c of pending) {
+        const t = this.cloudMeta.get(c.tbl);
+        if (!t || !t.pk.length) continue;
+
+        const tbl = this.q(c.tbl);
+        const pkCols = t.pk.map((p) => this.q(p)).join(', ');
+
+        try {
+          if (c.op === 'D') {
+            await this.cloudPrisma.$executeRawUnsafe(
+              `DELETE FROM ${tbl} WHERE (${pkCols}) = (SELECT ${pkCols} FROM jsonb_populate_record(NULL::${tbl}, $1::jsonb))`,
+              JSON.stringify(c.pk),
+            );
+          } else {
+            const sets = t.cols
+              .filter((x) => !t.pk.includes(x))
+              .map((x) => `${this.q(x)} = EXCLUDED.${this.q(x)}`);
+            const onConflict = sets.length
+              ? `ON CONFLICT (${pkCols}) DO UPDATE SET ${sets.join(', ')}`
+              : `ON CONFLICT (${pkCols}) DO NOTHING`;
+
+            await this.cloudPrisma.$executeRawUnsafe(
+              `INSERT INTO ${tbl} SELECT * FROM jsonb_populate_record(NULL::${tbl}, $1::jsonb) ${onConflict}`,
+              JSON.stringify(c.row),
+            );
+          }
+          appliedCount++;
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (/violates foreign key|23503/.test(msg) && pass < maxPasses - 1) {
+            retry.push(c);
+          } else {
+            conflicts.push({ tbl: c.tbl, pk: c.pkKey, error: msg.slice(0, 150) });
+          }
+        }
+      }
+      pending = retry;
+    }
+
+    // 5. Update lastPushSeq and clear errors
+    const maxSeq = rows[rows.length - 1].seq;
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE sync_state SET "lastPushSeq" = $1, "lastSyncAt" = now(), "lastError" = NULL WHERE id = 1`,
+      BigInt(maxSeq),
+    );
+
+    // Keep sync_changes table trimmed
+    await this.prisma.$executeRawUnsafe(
+      `DELETE FROM sync_changes WHERE seq <= (SELECT "lastPushSeq" FROM sync_state) AND ts < now() - interval '1 day'`,
+    );
+
+    return { pulled: 0, pushed: appliedCount, conflicts: conflicts.length };
+  }
+
   private async cycle() {
+    const cloudUrl = process.env.CLOUD_DATABASE_URL?.trim();
     const s = await this.state();
+    if (cloudUrl) {
+      return this.syncWithSupabase(cloudUrl, s);
+    }
     if (!s.enabled || s.role !== 'client') return null;
     let pulled = 0;
     let pushed = 0;
