@@ -37,6 +37,7 @@ export const PERMISSIONS = [
   { key: "accounting.manage", label: "Manage Accounting", category: "Accounting" },
   { key: "marketing.manage", label: "Manage Coupons, Promotions & Campaigns", category: "Marketing" },
   { key: "operations.manage", label: "Manage Equipment & Documents", category: "Operations" },
+  { key: "cash_drawer.manage", label: "Manage Cash Drawer & Shifts", category: "Orders" },
   { key: "system.update", label: "Manage App Updates", category: "Admin" },
 ] as const;
 
@@ -91,10 +92,11 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<StaffRole, PermissionKey[]> = {
     "inventory.manage", "reports.access", "kds.manage",
     "reservations.manage", "customers.manage", "refunds.process",
     "attendance.manage", "delivery.manage", "staff.manage", "accounting.manage", "marketing.manage", "operations.manage",
+    "cash_drawer.manage",
   ],
   CASHIER: [
     "orders.create", "orders.edit", "orders.accept", "bills.print", "discounts.apply",
-    "sales.view", "customers.manage", "dashboard.sales.view",
+    "sales.view", "customers.manage", "dashboard.sales.view", "cash_drawer.manage",
     "menu.view", "tables.view",
   ],
   // Waiters read the menu and floor plan and run orders; they cannot edit

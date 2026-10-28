@@ -43,6 +43,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { McpModule } from './mcp/mcp.module';
 import { SystemModule } from './system/system.module';
 import { VerifactuModule } from './modules/verifactu/verifactu.module';
+import { CashDrawerModule } from './modules/cash-drawer/cash-drawer.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { VerifactuModule } from './modules/verifactu/verifactu.module';
     DeliveryModule,
     HrModule,
     AccountingModule,
+    CashDrawerModule,
     MarketingModule,
     ReportsModule,
     OperationsModule,

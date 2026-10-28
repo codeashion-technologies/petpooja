@@ -1,10 +1,11 @@
-import { CalendarPlus, ChefHat, LayoutGrid, ShoppingCart, UtensilsCrossed } from "lucide-react";
+import { CalendarPlus, ChefHat, LayoutGrid, ShoppingCart, UtensilsCrossed, Wallet } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/context";
 
 const ACTIONS = [
   { href: "/pos", labelKey: "quickActions.newOrder", icon: ShoppingCart },
+  { href: "/cash-drawer", labelKey: "nav.cashDrawer", icon: Wallet },
   { href: "/tables", labelKey: "quickActions.tables", icon: LayoutGrid },
   { href: "/reservations", labelKey: "quickActions.newReservation", icon: CalendarPlus },
   { href: "/kds", labelKey: "quickActions.kds", icon: ChefHat },

@@ -16,6 +16,7 @@ import {
   ShoppingCart,
   UsersRound,
   UtensilsCrossed,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +30,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard.sales.view" },
   { labelKey: "nav.pos", href: "/pos", icon: ShoppingCart, permission: "orders.create" },
+  { labelKey: "nav.cashDrawer", href: "/cash-drawer", icon: Wallet, permission: "cash_drawer.manage" },
   { labelKey: "nav.orders", href: "/orders", icon: ClipboardList, permission: "orders.create" },
   { labelKey: "nav.tables", href: "/tables", icon: LayoutGrid, permission: "tables.view" },
   {

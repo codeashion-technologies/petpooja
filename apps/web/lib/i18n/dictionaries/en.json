@@ -1,6 +1,7 @@
 {
   "nav.dashboard": "Dashboard",
   "nav.pos": "Point of Sale",
+  "nav.cashDrawer": "Cash Drawer",
   "nav.tables": "Tables",
   "nav.orders": "Orders",
   "nav.reservations": "Reservations",
