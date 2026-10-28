@@ -10,6 +10,8 @@ import { useBranch } from "@/hooks/use-branch";
 import { useSettings } from "@/hooks/use-settings";
 import { BrandFooter } from "./brand-footer";
 import { BranchSwitcher } from "./branch-switcher";
+import { FullscreenToggle } from "./fullscreen-toggle";
+import { InstallAppButton } from "./install-app-button";
 import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 import { MobileBottomNav } from "./mobile-bottom-nav";
@@ -106,7 +108,9 @@ export function AppShell({
             <Menu className="h-5 w-5" />
           </button>
           <div className="hidden lg:block" />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <InstallAppButton />
+            <FullscreenToggle />
             <LanguageSwitcher compact />
             <NotificationBell />
             <UserMenu user={user} />

@@ -1,5 +1,5 @@
 {
-  "name": "Nodedr OrderRestro",
+  "name": "OrderRestro POS",
   "short_name": "OrderRestro",
   "description": "Offline-first restaurant management system — POS, tables, kitchen display, menu, inventory.",
   "start_url": "/",
@@ -29,6 +29,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "POS Billing Counter",
+      "short_name": "POS",
+      "description": "Open POS Quick Billing counter",
+      "url": "/pos",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Kitchen Display (KDS)",
+      "short_name": "KDS",
+      "description": "Open Kitchen Order Display",
+      "url": "/kds",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tables & Floor Plan",
+      "short_name": "Tables",
+      "description": "Manage table status and layout",
+      "url": "/tables",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
