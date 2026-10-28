@@ -8,7 +8,7 @@ export default function KioskPage({ params }: { params: Promise<{ token: string 
   const { token } = use(params);
   // Pinned to Spanish and independent of the staff UI's saved language.
   return (
-    <I18nProvider fixedLocale="es">
+    <I18nProvider fixedLocale="en">
       <KioskApp token={token} />
     </I18nProvider>
   );

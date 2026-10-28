@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveTabs } from "@/components/ui/nav-picker";
 import { useCategories, useMenuItems, type MenuItem } from "@/hooks/use-menu";
 import { formatCurrency } from "@/lib/format";
+import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
 export function ProductGrid({
@@ -16,6 +17,7 @@ export function ProductGrid({
   branchId: string | null;
   onSelect: (item: MenuItem) => void;
 }) {
+  const { t } = useI18n();
   const { data: categories } = useCategories(branchId);
   const [activeCategoryId, setActiveCategoryId] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState("");
@@ -26,7 +28,7 @@ export function ProductGrid({
   return (
     <div className="flex h-full flex-col gap-4">
       <Input
-        placeholder="Search menu…"
+        placeholder={t("pos.searchMenu")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="h-11"
@@ -36,11 +38,11 @@ export function ProductGrid({
         <ResponsiveTabs
           mobileOnly
           className="lg:hidden"
-          label="Category"
+          label={t("kiosk.menu.categories")}
           value={activeCategoryId ?? "all"}
           onChange={(id) => setActiveCategoryId(id === "all" ? undefined : id)}
           desktopListClassName="justify-start lg:h-auto lg:flex-wrap"
-          items={[{ id: "all", label: "All" }, ...categories.map((c) => ({ id: c.id, label: c.name, hint: `${c._count.items} items` }))]}
+          items={[{ id: "all", label: t("common.all") }, ...categories.map((c) => ({ id: c.id, label: c.name, hint: `${c._count.items} items` }))]}
         />
       )}
 

@@ -16,6 +16,7 @@ import { useManagedOrders } from "@/hooks/use-orders";
 import { openEntity } from "@/lib/entity-events";
 import { useDashboardSummary, useDashboardTrends } from "@/hooks/use-dashboard";
 import { formatCurrency } from "@/lib/format";
+import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
 const ONLINE_ORDER_TYPES = new Set(["QR_ORDER", "KIOSK"]);
@@ -67,6 +68,7 @@ function TableStatusRow({ label, count, dotClass }: { label: string; count: numb
 
 export default function DashboardPage() {
   const { branchId } = useBranch();
+  const { t } = useI18n();
   const { data, isLoading } = useDashboardSummary(branchId);
   const { data: trends, isLoading: trendsLoading } = useDashboardTrends(branchId);
   const [viewingOrderId, setViewingOrderId] = useState<string | null>(null);
@@ -74,8 +76,8 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[32px] font-semibold tracking-tight text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Real-time overview of today&apos;s service</p>
+        <h1 className="text-[32px] font-semibold tracking-tight text-foreground">{t("dashboard.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
       </div>
 
       <OrderDetailDialog
@@ -100,21 +102,21 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Today's Revenue"
+            label={t("dashboard.todayRevenue")}
             value={formatCurrency(data.todayRevenue)}
             icon={Wallet}
             accent="success"
           />
-          <Link href="/orders" className="block rounded-xl transition hover:opacity-90" title="Manage orders">
-            <StatCard label="Today's Orders" value={String(data.todayOrders)} icon={ReceiptText} />
+          <Link href="/orders" className="block rounded-xl transition hover:opacity-90" title={t("orders.title")}>
+            <StatCard label={t("dashboard.todayOrders")} value={String(data.todayOrders)} icon={ReceiptText} />
           </Link>
           <StatCard
-            label="Occupied Tables"
+            label={t("dashboard.occupiedTables")}
             value={String(data.tables.occupied)}
             icon={ClipboardList}
           />
           <StatCard
-            label="Kitchen Queue"
+            label={t("dashboard.kitchenQueue")}
             value={String(
               data.kitchenQueue.new + data.kitchenQueue.accepted + data.kitchenQueue.preparing,
             )}
@@ -126,36 +128,36 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TrendChart
-          title="Revenue — last 14 days"
+          title={t("dashboard.revenueChart")}
           icon={TrendingUp}
           data={trends?.revenue ?? []}
           valueKey="amount"
           color="var(--success)"
           valueFormatter={(v) => formatCurrency(v)}
           isLoading={trendsLoading}
-          emptyMessage="No paid orders in the last 14 days yet."
+          emptyMessage={t("dashboard.noPaidOrders")}
         />
         <TrendChart
-          title="Food waste cost — last 14 days"
+          title={t("dashboard.wasteChart")}
           icon={Trash2}
           data={trends?.waste ?? []}
           valueKey="cost"
           color="var(--warning)"
           valueFormatter={(v) => formatCurrency(v)}
           isLoading={trendsLoading}
-          emptyMessage="No waste logged in the last 14 days — nice."
+          emptyMessage={t("dashboard.noWasteLogged")}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="flex flex-col gap-1 p-6 lg:col-span-1">
-          <h2 className="mb-3 text-[18px] font-medium text-foreground">Tables</h2>
+          <h2 className="mb-3 text-[18px] font-medium text-foreground">{t("nav.tables")}</h2>
           {data && (
             <>
-              <TableStatusRow label="Available" count={data.tables.available} dotClass="bg-success" />
-              <TableStatusRow label="Occupied" count={data.tables.occupied} dotClass="bg-primary" />
-              <TableStatusRow label="Reserved" count={data.tables.reserved} dotClass="bg-warning" />
-              <TableStatusRow label="Cleaning" count={data.tables.cleaning} dotClass="bg-muted-foreground" />
+              <TableStatusRow label={t("tables.available")} count={data.tables.available} dotClass="bg-success" />
+              <TableStatusRow label={t("tables.occupied")} count={data.tables.occupied} dotClass="bg-primary" />
+              <TableStatusRow label={t("tables.reserved")} count={data.tables.reserved} dotClass="bg-warning" />
+              <TableStatusRow label={t("tables.cleaning")} count={data.tables.cleaning} dotClass="bg-muted-foreground" />
             </>
           )}
         </Card>
@@ -163,14 +165,14 @@ export default function DashboardPage() {
         <Card className="flex flex-col gap-1 p-6 lg:col-span-1">
           <h2 className="mb-3 flex items-center gap-2 text-[18px] font-medium text-foreground">
             <ChefHat className="h-[18px] w-[18px] text-muted-foreground" />
-            Kitchen queue
+            {t("dashboard.kitchenQueueTitle")}
           </h2>
           {data && (
             <>
-              <TableStatusRow label="New" count={data.kitchenQueue.new} dotClass="bg-primary" />
-              <TableStatusRow label="Accepted" count={data.kitchenQueue.accepted} dotClass="bg-warning" />
-              <TableStatusRow label="Preparing" count={data.kitchenQueue.preparing} dotClass="bg-warning" />
-              <TableStatusRow label="Ready" count={data.kitchenQueue.ready} dotClass="bg-success" />
+              <TableStatusRow label={t("kds.new")} count={data.kitchenQueue.new} dotClass="bg-primary" />
+              <TableStatusRow label={t("kds.accepted")} count={data.kitchenQueue.accepted} dotClass="bg-warning" />
+              <TableStatusRow label={t("kds.preparing")} count={data.kitchenQueue.preparing} dotClass="bg-warning" />
+              <TableStatusRow label={t("kds.ready")} count={data.kitchenQueue.ready} dotClass="bg-success" />
             </>
           )}
         </Card>
@@ -178,11 +180,11 @@ export default function DashboardPage() {
         <Card className="flex flex-col gap-3 p-6 lg:col-span-1">
           <h2 className="flex items-center gap-2 text-[18px] font-medium text-foreground">
             <Timer className="h-[18px] w-[18px] text-muted-foreground" />
-            Recent transactions
+            {t("dashboard.recentTransactions")}
           </h2>
           <div className="flex flex-col divide-y divide-border">
             {data?.recentOrders.length === 0 && (
-              <p className="py-4 text-sm text-muted-foreground">No sales yet today.</p>
+              <p className="py-4 text-sm text-muted-foreground">{t("dashboard.noSalesToday")}</p>
             )}
             {data?.recentOrders.map((order) => {
               const isOnline = ONLINE_ORDER_TYPES.has(order.type);
@@ -226,15 +228,15 @@ export default function DashboardPage() {
         <Card className="flex flex-col gap-3 p-6 lg:col-span-1">
           <h2 className="flex items-center gap-2 text-[18px] font-medium text-foreground">
             <ReceiptText className="h-[18px] w-[18px] text-muted-foreground" />
-            Order channels
+            {t("dashboard.orderChannels")}
           </h2>
-          <p className="text-xs text-muted-foreground">Today, self-serve vs staff-entered</p>
+          <p className="text-xs text-muted-foreground">{t("dashboard.orderChannelsSubtitle")}</p>
           {data && (
             <>
               <div className="flex items-center justify-between py-1.5 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Globe className="h-3.5 w-3.5" />
-                  Online (QR / kiosk)
+                  {t("dashboard.onlineChannels")}
                 </div>
                 <span className="font-medium tabular-nums text-foreground">
                   {data.channels.online}
@@ -243,7 +245,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between py-1.5 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Store className="h-3.5 w-3.5" />
-                  Offline (dine-in / takeaway / phone)
+                  {t("dashboard.offlineChannels")}
                 </div>
                 <span className="font-medium tabular-nums text-foreground">
                   {data.channels.offline}
@@ -271,15 +273,16 @@ export default function DashboardPage() {
 
 // Online orders waiting for a decision — shown on top so they can't be missed.
 function PendingOrdersBanner({ branchId }: { branchId: string | null }) {
+  const { t } = useI18n();
   const { data } = useManagedOrders(branchId, "pending");
   if (!data || data.length === 0) return null;
   return (
     <Card className="flex flex-col gap-3 border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-sm font-semibold text-foreground">
-          {data.length} online order{data.length === 1 ? "" : "s"} waiting for you
+          {t("dashboard.pendingOrdersWaiting", { count: data.length })}
         </p>
-        <p className="text-xs text-muted-foreground">Accept or reject so the kitchen can start.</p>
+        <p className="text-xs text-muted-foreground">{t("dashboard.pendingOrdersSubtitle")}</p>
       </div>
       <div className="flex gap-2">
         <button
@@ -287,10 +290,10 @@ function PendingOrdersBanner({ branchId }: { branchId: string | null }) {
           onClick={() => openEntity("Order", data[0].id)}
           className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
         >
-          Review #{data[0].orderNumber}
+          {t("dashboard.reviewOrder", { number: data[0].orderNumber })}
         </button>
         <Link href="/orders" className="rounded-lg border border-border px-3 py-1.5 text-sm">
-          All orders
+          {t("dashboard.allOrders")}
         </Link>
       </div>
     </Card>

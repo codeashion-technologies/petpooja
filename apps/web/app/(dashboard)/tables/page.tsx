@@ -18,10 +18,12 @@ import { TableRequestsBar } from "@/components/tables/table-requests-bar";
 import { hasPermission, useCurrentUser } from "@/hooks/use-auth";
 import { useBranch } from "@/hooks/use-branch";
 import { useFloors, type RestaurantTable } from "@/hooks/use-tables";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function TablesPage() {
   const { branchId } = useBranch();
   const { data: me } = useCurrentUser();
+  const { t } = useI18n();
   // tables.view is read-only (status updates stay available); layout edits need tables.manage.
   const canManage = hasPermission(me?.user, "tables.manage");
   const floorsQuery = useFloors(branchId);
@@ -88,17 +90,17 @@ export default function TablesPage() {
       <TableRequestsBar branchId={branchId} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
-          <h1 className="text-[32px] font-semibold tracking-tight text-foreground">Tables</h1>
+          <h1 className="text-[32px] font-semibold tracking-tight text-foreground">{t("nav.tables")}</h1>
           <p className="text-sm text-muted-foreground">
             {editMode
-              ? "Drag tables to match your floor — changes save automatically"
-              : "Live floor status — tap a table to update it"}
+              ? t("tables.editSubtitle")
+              : t("tables.subtitle")}
           </p>
         </div>
         {canManage && floors && floors.length > 0 && (
           <Button variant={editMode ? "default" : "outline"} size="sm" className="h-11 w-full sm:h-8 sm:w-auto" onClick={() => setEditMode((v) => !v)}>
             <LayoutGrid className="h-4 w-4" />
-            {editMode ? "Done editing" : "Edit floor plan"}
+            {editMode ? t("tables.doneEditing") : t("tables.editFloorPlan")}
           </Button>
         )}
       </div>

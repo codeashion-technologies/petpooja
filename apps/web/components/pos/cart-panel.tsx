@@ -15,6 +15,7 @@ import type { CartLine } from "@/components/pos/cart-line";
 import type { RestaurantTable } from "@/hooks/use-tables";
 import { formatCurrency } from "@/lib/format";
 import { subtotalOf } from "@/lib/pricing-preview";
+import { useI18n } from "@/lib/i18n/context";
 
 export type PosOrderType = "DINE_IN" | "TAKEAWAY" | "DELIVERY";
 export interface DeliveryDetails {
@@ -70,6 +71,7 @@ export function CartPanel({
   scheduledFor: string;
   onScheduledForChange: (v: string) => void;
 }) {
+  const { t } = useI18n();
   const subtotal = subtotalOf(lines.map((l) => l.unitPrice * l.quantity));
   const deliveryReady =
     orderType !== "DELIVERY" ||
@@ -82,13 +84,13 @@ export function CartPanel({
       <Tabs value={orderType} onValueChange={(v) => onOrderTypeChange(v as PosOrderType)}>
         <TabsList className="w-full">
           <TabsTrigger value="DINE_IN" className="flex-1">
-            Dine-in
+            {t("pos.dineIn")}
           </TabsTrigger>
           <TabsTrigger value="TAKEAWAY" className="flex-1">
-            Takeaway
+            {t("pos.takeaway")}
           </TabsTrigger>
           <TabsTrigger value="DELIVERY" className="flex-1">
-            Delivery
+            {t("pos.delivery")}
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -96,18 +98,18 @@ export function CartPanel({
       {orderType === "DINE_IN" && (
         <Select value={tableId} onValueChange={(v) => onTableChange(v ?? "")}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select table">
+            <SelectValue placeholder={t("pos.selectTable")}>
               {(value: string | null) => {
-                const t = tables.find((table) => table.id === value);
-                if (!t) return "Select table";
-                return `${t.name ?? `Table ${t.number}`}${t.status === "OCCUPIED" ? " (occupied)" : ""}`;
+                const tableItem = tables.find((table) => table.id === value);
+                if (!tableItem) return t("pos.selectTable");
+                return `${tableItem.name ?? `Table ${tableItem.number}`}${tableItem.status === "OCCUPIED" ? " (occupied)" : ""}`;
               }}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {tables.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name ?? `Table ${t.number}`} {t.status === "OCCUPIED" ? "(occupied)" : ""}
+            {tables.map((tableItem) => (
+              <SelectItem key={tableItem.id} value={tableItem.id}>
+                {tableItem.name ?? `Table ${tableItem.number}`} {tableItem.status === "OCCUPIED" ? "(occupied)" : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -187,7 +189,7 @@ export function CartPanel({
               className="h-7 shrink-0 px-2 text-xs"
               onClick={onViewExistingOrder}
             >
-              View & pay
+              {t("pos.viewAndPay")}
             </Button>
           )}
         </div>
@@ -197,7 +199,7 @@ export function CartPanel({
         {lines.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
             <ShoppingCart className="h-8 w-8 opacity-40" />
-            <p className="text-sm">Cart is empty</p>
+            <p className="text-sm">{t("pos.cartEmpty")}</p>
           </div>
         ) : (
           <div className="flex flex-col divide-y divide-border">
@@ -247,17 +249,17 @@ export function CartPanel({
 
       <div className="flex flex-col gap-3 border-t border-border pt-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Subtotal (incl. tax)</span>
+          <span className="text-muted-foreground">{t("pos.subtotal")}</span>
           <span className="font-semibold tabular-nums text-foreground">
             {formatCurrency(subtotal)}
           </span>
         </div>
         <Button className="h-11" disabled={!canSubmit} onClick={onSubmit}>
           {isSubmitting
-            ? "Sending to kitchen…"
+            ? t("pos.sendingToKitchen")
             : existingOrderNumber
-              ? "Add to order & send to kitchen"
-              : "Send to kitchen"}
+              ? t("pos.addToOrderSend")
+              : t("pos.sendToKitchen")}
         </Button>
       </div>
     </div>

@@ -11,10 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSyncNow, useSyncStatus } from "@/hooks/use-sync";
+import { useI18n } from "@/lib/i18n/context";
 
 export function SyncStatusIndicator() {
   const { data, isLoading } = useSyncStatus();
   const syncNow = useSyncNow();
+  const { t } = useI18n();
 
   if (isLoading || !data) {
     return null;
@@ -58,17 +60,17 @@ export function SyncStatusIndicator() {
         {isSyncing ? (
           <span className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full">
             <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-            <span className="hidden sm:inline">Syncing…</span>
+            <span className="hidden sm:inline">{t("sync.syncing")}</span>
           </span>
         ) : isOffline ? (
           <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full">
             <CloudOff className="h-3.5 w-3.5" />
-            <span>Offline {pending > 0 ? `(${pending})` : "Mode"}</span>
+            <span>{pending > 0 ? `${t("sync.offlineMode")} (${pending})` : t("sync.offlineMode")}</span>
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
             <Check className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Synced</span>
+            <span className="hidden sm:inline">{t("sync.synced")}</span>
           </span>
         )}
       </DropdownMenuTrigger>
@@ -76,7 +78,7 @@ export function SyncStatusIndicator() {
       <DropdownMenuContent align="end" className="w-80 p-4">
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center justify-between pb-2">
-            <h4 className="font-semibold text-sm">Cloud Sync Status</h4>
+            <h4 className="font-semibold text-sm">{t("sync.title")}</h4>
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 isOffline
@@ -84,7 +86,7 @@ export function SyncStatusIndicator() {
                   : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               }`}
             >
-              {isOffline ? "Offline / Local" : "Cloud Connected"}
+              {isOffline ? t("sync.offline") : t("sync.connected")}
             </span>
           </div>
         </DropdownMenuLabel>
@@ -92,28 +94,28 @@ export function SyncStatusIndicator() {
 
         <div className="text-xs space-y-1.5 text-muted-foreground py-2">
           <div className="flex justify-between">
-            <span>Cloud Server:</span>
+            <span>{t("sync.cloudServer")}</span>
             <span className="font-mono text-foreground truncate max-w-[170px]">
               {data.serverUrl || "Central Supabase"}
             </span>
           </div>
           <div className="flex justify-between">
-            <span>Last Synced:</span>
+            <span>{t("sync.lastSynced")}</span>
             <span className="text-foreground">
-              {data.lastSyncAt ? new Date(data.lastSyncAt).toLocaleTimeString() : "Pending"}
+              {data.lastSyncAt ? new Date(data.lastSyncAt).toLocaleTimeString() : t("sync.pending")}
             </span>
           </div>
           <div className="flex justify-between">
-            <span>Pending Local Changes:</span>
+            <span>{t("sync.pendingChanges")}</span>
             <span className={`font-semibold ${pending > 0 ? "text-amber-500" : "text-foreground"}`}>
-              {pending} changes
+              {t("sync.changes", { count: pending })}
             </span>
           </div>
         </div>
 
         {isOffline && (
           <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2 rounded my-2">
-            Local Mode: All your bills & orders are safely stored on this computer. They will automatically upload when internet reconnects.
+            {t("sync.offlineNotice")}
           </p>
         )}
 
@@ -126,7 +128,7 @@ export function SyncStatusIndicator() {
             disabled={syncNow.isPending}
           >
             <RefreshCw className={`h-3 w-3 ${syncNow.isPending ? "animate-spin" : ""}`} />
-            {syncNow.isPending ? "Syncing..." : "Sync Now"}
+            {syncNow.isPending ? t("sync.syncing") : t("sync.syncNow")}
           </Button>
         </div>
       </DropdownMenuContent>

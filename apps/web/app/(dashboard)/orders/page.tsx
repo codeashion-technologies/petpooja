@@ -20,23 +20,24 @@ import {
 } from "@/hooks/use-orders";
 import { formatCurrency } from "@/lib/format";
 import { openEntity } from "@/lib/entity-events";
+import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
-const TABS: { key: OrderTab; label: string }[] = [
-  { key: "pending", label: "New (to accept)" },
-  { key: "active", label: "In progress" },
-  { key: "history", label: "History" },
+const TABS: { key: OrderTab; labelKey: string }[] = [
+  { key: "pending", labelKey: "orders.tabPending" },
+  { key: "active", labelKey: "orders.tabActive" },
+  { key: "history", labelKey: "orders.tabHistory" },
 ];
 
 // One chip = one filter. Online/Offline filter by channel, the rest by how
 // the order is fulfilled.
-const FILTERS: { key: string; label: string; channel?: OrderChannel; type?: string }[] = [
-  { key: "all", label: "All" },
-  { key: "online", label: "Online", channel: "ONLINE" },
-  { key: "offline", label: "Offline", channel: "STAFF" },
-  { key: "takeaway", label: "Takeaway", type: "TAKEAWAY" },
-  { key: "delivery", label: "Delivery", type: "DELIVERY" },
-  { key: "dinein", label: "Dine-in", type: "DINE_IN" },
+const FILTERS: { key: string; labelKey: string; channel?: OrderChannel; type?: string }[] = [
+  { key: "all", labelKey: "orders.filterAll" },
+  { key: "online", labelKey: "orders.filterOnline", channel: "ONLINE" },
+  { key: "offline", labelKey: "orders.filterOffline", channel: "STAFF" },
+  { key: "takeaway", labelKey: "orders.filterTakeaway", type: "TAKEAWAY" },
+  { key: "delivery", labelKey: "orders.filterDelivery", type: "DELIVERY" },
+  { key: "dinein", labelKey: "orders.filterDineIn", type: "DINE_IN" },
 ];
 
 const chip = (on: boolean) =>
@@ -57,6 +58,7 @@ function timeAgo(iso: string) {
 
 export default function OrdersPage() {
   const { branchId } = useBranch();
+  const { t } = useI18n();
   const [tab, setTab] = useState<OrderTab>("pending");
   const [filterKey, setFilterKey] = useState("all");
   const filter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0];
@@ -88,7 +90,7 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-[32px] font-semibold tracking-tight text-foreground">Orders</h1>
+        <h1 className="text-[32px] font-semibold tracking-tight text-foreground">{t("nav.orders")}</h1>
         <p className="text-sm text-muted-foreground">
           Accept new online orders and manage everything in progress
         </p>
@@ -97,13 +99,13 @@ export default function OrdersPage() {
       <ScanOrderInput branchId={branchId} />
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <button key={t.key} type="button" onClick={() => {
-              setTab(t.key);
+        {TABS.map((tabItem) => (
+          <button key={tabItem.key} type="button" onClick={() => {
+              setTab(tabItem.key);
               setSelected(new Set());
-            }} className={chip(tab === t.key)}>
-            {t.label}
-            {t.key === "pending" && pendingCount > 0 && (
+            }} className={chip(tab === tabItem.key)}>
+            {t(tabItem.labelKey)}
+            {tabItem.key === "pending" && pendingCount > 0 && (
               <span className="ml-2 rounded-full bg-destructive px-1.5 text-xs text-white">
                 {pendingCount}
               </span>
@@ -120,7 +122,7 @@ export default function OrdersPage() {
             onClick={() => setFilterKey(f.key)}
             className={cn(chip(filterKey === f.key), "py-1 text-xs")}
           >
-            {f.label}
+            {t(f.labelKey)}
           </button>
         ))}
       </div>
