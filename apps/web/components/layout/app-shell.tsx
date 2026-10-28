@@ -16,6 +16,7 @@ import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { SidebarNav } from "./sidebar-nav";
+import { SyncStatusIndicator } from "./sync-status-indicator";
 import { UserMenu } from "./user-menu";
 
 // The restaurant's own logo + name lead the sidebar header — this is
@@ -109,6 +110,7 @@ export function AppShell({
           </button>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-1 sm:gap-2">
+            <SyncStatusIndicator />
             <InstallAppButton />
             <FullscreenToggle />
             <LanguageSwitcher compact />
