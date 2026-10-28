@@ -189,6 +189,7 @@ function GeneralSettingsForm({
   const [address, setAddress] = useState(branch.address ?? "");
   const [phone, setPhone] = useState(branch.phone ?? "");
   const [gstNumber, setGstNumber] = useState(branch.gstNumber ?? "");
+  const [invoicePrefix, setInvoicePrefix] = useState(branch.invoicePrefix ?? "");
   const [country, setCountry] = useState(branch.country);
   const [taxRegime, setTaxRegime] = useState<TaxRegime>(branch.taxRegime);
   const [taxMode, setTaxMode] = useState<TaxMode>(branch.taxMode);
@@ -229,6 +230,7 @@ function GeneralSettingsForm({
         address: address || undefined,
         phone: phone || undefined,
         gstNumber: gstNumber || undefined,
+        invoicePrefix: invoicePrefix.trim().toUpperCase() || null,
         country,
         taxRegime,
         taxMode,
@@ -435,6 +437,20 @@ function GeneralSettingsForm({
               <Label htmlFor="b-gst">GST number (legacy)</Label>
               <Input id="b-gst" value={gstNumber} onChange={(e) => setGstNumber(e.target.value)} />
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="b-prefix">Invoice / Bill Prefix</Label>
+            <Input
+              id="b-prefix"
+              value={invoicePrefix}
+              onChange={(e) => setInvoicePrefix(e.target.value.toUpperCase())}
+              placeholder="BR1"
+              maxLength={10}
+            />
+            <p className="text-xs text-muted-foreground">
+              Used in bill numbers (e.g. BR1-20261028-0001) to keep bills globally unique across branches and offline devices.
+            </p>
           </div>
 
           <div className="flex flex-col gap-2 border-t border-border pt-4">

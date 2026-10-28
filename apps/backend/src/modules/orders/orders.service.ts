@@ -2080,20 +2080,31 @@ export class OrdersService {
     };
   }
 
-  // Next number for today: highest existing sequence + 1, not a row count. A
-  // count collides with an existing number as soon as any earlier order of the
-  // day has been deleted (orders.delete), and that surfaced as a 409 on the
-  // unique (branchId, orderNumber) index.
+  // Next number for today: highest existing sequence + 1, scoped by branch
+  // invoice prefix (e.g. BR1-20261028-0001) to prevent duplicate bills across
+  // branches or during offline sync.
   private async nextOrderNumber(branchId: string): Promise<string> {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: branchId },
+      select: { invoicePrefix: true },
+    });
+    const prefix = branch?.invoicePrefix?.trim().toUpperCase() || 'BR1';
+    const pattern = `${prefix}-${datePart}-`;
     const latest = await this.prisma.order.findFirst({
-      where: { branchId, orderNumber: { startsWith: `${datePart}-` } },
+      where: {
+        branchId,
+        OR: [
+          { orderNumber: { startsWith: pattern } },
+          { orderNumber: { startsWith: `${datePart}-` } },
+        ],
+      },
       orderBy: { orderNumber: 'desc' },
       select: { orderNumber: true },
     });
-    const last = latest ? Number(latest.orderNumber.split('-')[1]) : 0;
+    const last = latest ? Number(latest.orderNumber.split('-').pop()) : 0;
     const next = (Number.isFinite(last) ? last : 0) + 1;
-    return `${datePart}-${String(next).padStart(4, '0')}`;
+    return `${prefix}-${datePart}-${String(next).padStart(4, '0')}`;
   }
 
   /**

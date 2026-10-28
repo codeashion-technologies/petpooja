@@ -99,10 +99,11 @@ model Branch {
   verifactuSettings VerifactuSettings?
   verifactuRecords  VerifactuRecord[]
 
-  name      String
-  address   String?
-  phone     String?
-  gstNumber String?
+  name          String
+  address       String?
+  phone         String?
+  gstNumber     String?
+  invoicePrefix String?
 
   // Multi-region tax config (2026-09-27). country is an ISO 3166-1 alpha-2
   // code driving default currency/locale suggestions in the UI; it does not

@@ -28,6 +28,7 @@ export interface BranchSettings {
   address: string | null;
   phone: string | null;
   gstNumber: string | null;
+  invoicePrefix: string | null;
   country: string;
   taxRegime: TaxRegime;
   taxMode: TaxMode;

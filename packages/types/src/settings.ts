@@ -35,6 +35,7 @@ export const branchSettingsSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   gstNumber: z.string().optional(),
+  invoicePrefix: z.string().max(10).trim().toUpperCase().optional().nullable(),
   // Multi-region tax config — see tax.ts for the regime presets this
   // pairs with (label, default mode, CGST/SGST split).
   country: z.string().length(2).optional(),
