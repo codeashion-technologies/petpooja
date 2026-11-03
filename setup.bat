@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 title OrderRestro POS — Windows Setup
 
-:: Switch to script directory (Project Root)
+:: Switch to script directory
 cd /d "%~dp0"
 
 echo ====================================================================
@@ -10,11 +10,18 @@ echo             OrderRestro Restaurant POS — 1-Click Setup
 echo ====================================================================
 echo.
 
+:: Ensure Docker binaries are in PATH even if system hasn't refreshed PATH yet
+if exist "%ProgramFiles%\Docker\Docker\resources\bin\docker.exe" (
+    set "PATH=%ProgramFiles%\Docker\Docker\resources\bin;%PATH%"
+)
+
 :: 1. Check if Docker is installed
 where docker >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Docker was not found on this computer.
     echo Please install Docker Desktop for Windows: https://www.docker.com/products/docker-desktop/
+    echo.
+    echo After installing, open Docker Desktop and accept the agreement, then run setup.bat again.
     echo.
     pause
     exit /b 1
@@ -23,25 +30,56 @@ if %ERRORLEVEL% neq 0 (
 :: 2. Check if Docker Engine is running
 echo [1/5] Checking Docker service...
 docker info >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo Docker is installed but not running. Starting Docker Desktop...
-    if exist "%ProgramFiles%\Docker\Docker\Docker Desktop.exe" (
-        start "" "%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
-    )
-    echo Waiting for Docker Engine to start (up to 45 seconds)...
-    set /a attempts=0
-    :wait_docker
-    timeout /t 3 >nul
-    docker info >nul 2>&1
-    if %ERRORLEVEL% equ 0 goto docker_ready
-    set /a attempts+=1
-    if !attempts! leq 15 goto wait_docker
-    echo [ERROR] Docker Engine took too long to start. Please start Docker Desktop manually and re-run setup.bat.
-    pause
-    exit /b 1
+if %ERRORLEVEL% equ 0 goto docker_ready
+
+echo Docker is installed but not running yet.
+echo Attempting to start Docker Desktop...
+if exist "%ProgramFiles%\Docker\Docker\Docker Desktop.exe" (
+    start "" "%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
 )
+
+echo.
+echo Waiting for Docker Engine to start...
+echo (If Docker Desktop is opening for the first time, please click 'Accept' on its terms screen)
+echo.
+
+set /a attempts=0
+
+:wait_docker
+timeout /t 3 >nul
+docker info >nul 2>&1
+if %ERRORLEVEL% equ 0 goto docker_ready
+
+set /a attempts+=1
+if !attempts! leq 30 (
+    echo ... waiting for Docker Engine to initialize (!attempts!/30) ...
+    goto wait_docker
+)
+
+echo.
+echo ====================================================================
+echo [ATTENTION] Docker Engine took longer than expected to start.
+echo.
+echo Please check on this PC:
+echo  1. Open "Docker Desktop" from Start Menu / Desktop.
+echo  2. If it asks you to Accept Terms, click "Accept".
+echo  3. Wait until the bottom-left corner of Docker Desktop turns GREEN ("Engine running").
+echo  4. Once it is Green, press any key below to continue setup!
+echo ====================================================================
+echo.
+pause
+
+:: Re-check after user pressed key
+docker info >nul 2>&1
+if %ERRORLEVEL% equ 0 goto docker_ready
+
+echo [ERROR] Docker is still not running. Please ensure Docker Desktop shows "Engine running" and re-run setup.bat.
+pause
+exit /b 1
+
 :docker_ready
-echo       Docker is running and ready.
+echo       Docker Engine is running and ready!
+echo.
 
 :: 3. Configure .env file
 echo [2/5] Configuring environment settings...
@@ -60,6 +98,7 @@ if not exist ".env" (
 ) else (
     echo       Existing .env file detected. Keeping settings.
 )
+echo.
 
 :: 4. Start Docker Containers
 echo [3/5] Starting OrderRestro services (Database, Backend, POS Web)...
@@ -69,8 +108,9 @@ if %ERRORLEVEL% neq 0 (
     pause
     exit /b 1
 )
+echo.
 
-:: Wait for Web service on port 1995
+:: 5. Wait for Web service on port 1995
 echo [4/5] Waiting for POS server to become ready...
 set /a port_attempts=0
 :wait_port
@@ -83,8 +123,9 @@ echo       Server is starting in background...
 
 :app_ready
 echo       POS Server is alive at http://localhost:1995
+echo.
 
-:: 5. Create Desktop Shortcut and Auto-Start
+:: 6. Create Desktop Shortcut and Auto-Start
 echo [5/5] Creating Desktop App Shortcut and registering Windows Auto-Start...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\windows\create-desktop-shortcut.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\windows\register-autostart.ps1"
