@@ -20,6 +20,7 @@ import {
   HelpCircle,
   Check,
   X,
+  Menu,
   Lock,
   ArrowUpRight,
   UserCheck,
@@ -36,6 +37,7 @@ import { SAAS_PLANS, type PlanTier } from "@nodedr-restaurant/types";
 
 export default function MarketingHomePage() {
   const [billingCycle, setBillingCycle] = useState<"ANNUAL" | "MONTHLY">("ANNUAL");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Demo lead state
   const [restaurantName, setRestaurantName] = useState("");
@@ -110,7 +112,7 @@ export default function MarketingHomePage() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
             <Link href="/login">
               <Button variant="ghost" size="sm" className="gap-1.5 font-medium">
                 <UserCheck className="h-4 w-4" />
@@ -123,7 +125,67 @@ export default function MarketingHomePage() {
               </Button>
             </a>
           </div>
+
+          {/* Mobile Hamburger Controls */}
+          <div className="flex items-center gap-2 md:hidden">
+            <Link href="/login">
+              <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs font-medium">
+                Login
+              </Button>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="border-t border-border bg-card/95 backdrop-blur-md px-4 py-4 md:hidden space-y-3 animate-in slide-in-from-top-2 duration-200">
+            <nav className="flex flex-col gap-1 text-sm font-medium">
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-2 text-foreground hover:bg-muted transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#operations"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-2 text-foreground hover:bg-muted transition-colors"
+              >
+                Operations & KDS
+              </a>
+              <a
+                href="#pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-2 text-foreground hover:bg-muted transition-colors"
+              >
+                Plans & Pricing
+              </a>
+              <a
+                href="#demo"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-2 text-foreground hover:bg-muted transition-colors"
+              >
+                Book Live Demo
+              </a>
+            </nav>
+            <div className="pt-2 border-t border-border">
+              <a href="#demo" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full bg-primary text-primary-foreground font-semibold">
+                  Book a Free Live Demo
+                </Button>
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 2. Hero Section */}
