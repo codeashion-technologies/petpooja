@@ -23,6 +23,11 @@ import {
   Lock,
   ArrowUpRight,
   UserCheck,
+  Printer,
+  Clock,
+  Smartphone,
+  LayoutGrid,
+  Bell,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
@@ -275,6 +280,211 @@ export default function MarketingHomePage() {
                 Staff can switch languages with one click.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3.5 Operations & KDS Section */}
+      <section id="operations" className="py-20 bg-background border-b border-border px-4 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-3 shadow-sm">
+              <ChefHat className="h-3.5 w-3.5" />
+              <span>Real-Time Kitchen, Floor & Captain Workflow</span>
+            </div>
+            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Seamless Operations from Captain to Kitchen
+            </h3>
+            <p className="mt-3 text-muted-foreground text-sm sm:text-base">
+              Say goodbye to messy paper tickets and delayed orders. Connect captains, cashiers, and kitchen chefs in real-time.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Card 1: Wireless KDS */}
+            <div className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600">
+                  <ChefHat className="h-6 w-6" />
+                </div>
+                <span className="rounded-full bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 text-[11px] font-bold text-orange-600">
+                  PAPERLESS KDS
+                </span>
+              </div>
+              <h4 className="text-xl font-bold text-foreground">Live Kitchen Display System</h4>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                Replaces noisy dot-matrix printers with digital screens. Order tickets appear instantly with color-coded timers and station filters.
+              </p>
+
+              {/* KDS Mockup Ticket */}
+              <div className="mt-6 rounded-2xl border border-border bg-muted/40 p-4 space-y-3 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-border/80 pb-2">
+                  <div className="font-bold text-foreground">TICKET #104</div>
+                  <span className="rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold animate-pulse">
+                    PREPARING · 3m
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-foreground text-[11px]">
+                  <div className="flex justify-between">
+                    <span>2x Paneer Tikka Masala</span>
+                    <span className="text-primary font-bold">Main</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground pl-2 italic">
+                    ↳ Note: Mild spicy, less oil
+                  </div>
+                  <div className="flex justify-between">
+                    <span>4x Butter Garlic Naan</span>
+                    <span className="text-primary font-bold">Tandoor</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-border/80 flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>Table 07 · Dine-In</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Captain: Rahul</span>
+                </div>
+              </div>
+
+              <ul className="mt-6 space-y-2 text-xs text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Works on any Android TV, tablet, iPad or PC</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Audio chime alerts when new order arrives</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Split items across Kitchen, Tandoor & Bar stations</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Card 2: Captain App & Table Management */}
+            <div className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+                  <LayoutGrid className="h-6 w-6" />
+                </div>
+                <span className="rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-[11px] font-bold text-blue-600">
+                  TABLE & FLOOR MAP
+                </span>
+              </div>
+              <h4 className="text-xl font-bold text-foreground">Captain App & Floor Layout</h4>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                Waiters take orders tableside on their mobile phones. Live visual floor map displays vacant, occupied, running KOT, and billed tables.
+              </p>
+
+              {/* Table Floor Mockup */}
+              <div className="mt-6 rounded-2xl border border-border bg-muted/40 p-4 space-y-2.5 text-xs">
+                <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider mb-2">
+                  Ground Floor · Realtime Occupancy
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-center">
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400">T-01 (4 Pax)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Vacant / Ready</div>
+                  </div>
+                  <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5 text-center">
+                    <div className="font-bold text-primary">T-02 (2 Pax)</div>
+                    <div className="text-[10px] font-mono text-foreground font-semibold mt-0.5">₹1,420 (KOT Live)</div>
+                  </div>
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center">
+                    <div className="font-bold text-amber-600 dark:text-amber-400">T-03 (6 Pax)</div>
+                    <div className="text-[10px] text-foreground font-semibold mt-0.5">Bill Printed</div>
+                  </div>
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-center">
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400">T-04 (4 Pax)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Vacant / Ready</div>
+                  </div>
+                </div>
+              </div>
+
+              <ul className="mt-6 space-y-2 text-xs text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Transfer items between tables or merge bills easily</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Captains take orders on smartphone — zero notepad wastage</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Guest seat tracking and quick table turnaround alerts</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Card 3: Thermal Hardware & Cash Reconciliation */}
+            <div className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600">
+                  <Printer className="h-6 w-6" />
+                </div>
+                <span className="rounded-full bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 text-[11px] font-bold text-purple-600">
+                  HARDWARE ECOSYSTEM
+                </span>
+              </div>
+              <h4 className="text-xl font-bold text-foreground">Hardware & Shift Cash Float</h4>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                Connect your ESC/POS receipt printers, automatic cash drawer, barcode scanners, and track cashier shift balances down to the penny.
+              </p>
+
+              {/* Hardware Mockup */}
+              <div className="mt-6 rounded-2xl border border-border bg-muted/40 p-4 space-y-2 font-mono text-xs">
+                <div className="flex items-center justify-between text-muted-foreground text-[10px] border-b border-border/80 pb-2">
+                  <span>ESC/POS 80mm PRINTER</span>
+                  <span className="text-emerald-500 font-bold">ONLINE (USB/LAN)</span>
+                </div>
+                <div className="bg-background rounded-lg p-2.5 border border-border text-[11px] space-y-1">
+                  <div className="flex justify-between">
+                    <span>Shift Opening Float:</span>
+                    <span className="font-bold text-foreground">₹2,000.00</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Cash Collected Today:</span>
+                    <span className="font-bold">+ ₹18,450.00</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border pt-1 font-bold text-foreground">
+                    <span>Expected in Drawer:</span>
+                    <span className="text-primary">₹20,450.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <ul className="mt-6 space-y-2 text-xs text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Supports all 58mm and 80mm thermal receipt printers</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Auto drawer trigger kicks open upon cash payment</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Day-end Z-Report with full GST breakdown</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Interactive banner */}
+          <div className="mt-12 rounded-2xl border border-primary/20 bg-primary/5 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+            <div>
+              <h4 className="text-lg sm:text-xl font-bold text-foreground">
+                Ready to experience modern kitchen and floor operations?
+              </h4>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                Book a personalized demo and see live KDS routing and wireless captain ordering on your screen.
+              </p>
+            </div>
+            <a href="#demo" className="shrink-0">
+              <Button size="lg" className="h-11 px-6 font-semibold bg-primary text-primary-foreground gap-2">
+                Schedule Live Operations Demo
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </a>
           </div>
         </div>
       </section>
