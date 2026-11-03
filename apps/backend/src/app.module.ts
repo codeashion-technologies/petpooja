@@ -44,6 +44,7 @@ import { McpModule } from './mcp/mcp.module';
 import { SystemModule } from './system/system.module';
 import { VerifactuModule } from './modules/verifactu/verifactu.module';
 import { CashDrawerModule } from './modules/cash-drawer/cash-drawer.module';
+import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { CashDrawerModule } from './modules/cash-drawer/cash-drawer.module';
     IntegrationsModule,
     McpModule,
     SystemModule,
+    SuperAdminModule,
   ],
   controllers: [AppController],
   providers: [

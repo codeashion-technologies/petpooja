@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import {
   DEFAULT_ROLE_PERMISSIONS,
   PERMISSIONS,
@@ -13,9 +14,19 @@ import {
   type RegisterDto,
   type SessionUser,
 } from '@nodedr-restaurant/types';
-import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { TwoFactorService } from './two-factor.service';
+
+interface UserWithRole {
+  id: string;
+  restaurantId: string;
+  name: string;
+  roleId: string;
+  role: {
+    name: string;
+    permissions: Array<{ permission: { key: string } }>;
+  };
+}
 
 @Injectable()
 export class AuthService {
@@ -25,27 +36,18 @@ export class AuthService {
     private readonly twoFactor: TwoFactorService,
   ) {}
 
-  private toSessionUser(user: {
-    id: string;
-    restaurantId: string;
-    name: string;
-    roleId: string;
-    role: { name: string; permissions: { permission: { key: string } }[] };
-  }): SessionUser {
-    return {
-      id: user.id,
-      restaurantId: user.restaurantId,
-      name: user.name,
-      roleId: user.roleId,
-      roleName: user.role.name,
-      permissions: user.role.permissions.map((rp) => rp.permission.key),
-    };
+  async hasAnyRestaurant(): Promise<boolean> {
+    const restaurant = await this.prisma.restaurant.findFirst({
+      select: { id: true },
+    });
+    return restaurant !== null;
   }
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findFirst({
       where: { email: dto.email, isActive: true },
       include: {
+        restaurant: true,
         role: { include: { permissions: { include: { permission: true } } } },
       },
     });
@@ -59,6 +61,21 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // Check SaaS License & Subscription Validity
+    if (user.restaurant?.subscriptionStatus === 'SUSPENDED') {
+      throw new UnauthorizedException(
+        'LICENSE_SUSPENDED: Your OrderRestro license has been suspended. Please contact support.',
+      );
+    }
+    if (
+      user.restaurant?.subscriptionExpiresAt &&
+      new Date(user.restaurant.subscriptionExpiresAt).getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException(
+        'LICENSE_EXPIRED: Your OrderRestro subscription has expired. Please contact support to renew.',
+      );
+    }
+
     // Only asked for after the password is right, so the response never
     // reveals which emails exist or which accounts use two-factor.
     if (user.twoFactorEnabled) {
@@ -68,7 +85,7 @@ export class AuthService {
     return this.issueSession(user);
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto & { plan?: string }) {
     const existing = await this.prisma.user.findFirst({
       where: { email: dto.email },
     });
@@ -78,8 +95,6 @@ export class AuthService {
       );
     }
 
-    // Permissions are global, not per-tenant — upsert (idempotent) outside
-    // the transaction below rather than re-creating them per restaurant.
     for (const permission of PERMISSIONS) {
       await this.prisma.permission.upsert({
         where: { key: permission.key },
@@ -91,10 +106,19 @@ export class AuthService {
     const permissionByKey = new Map(allPermissions.map((p) => [p.key, p]));
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
+    const pinHash = await bcrypt.hash('1234', 12);
+
+    // Default 14-day trial for public registrations
+    const trialExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
     const owner = await this.prisma.$transaction(async (tx) => {
       const restaurant = await tx.restaurant.create({
-        data: { name: dto.restaurantName },
+        data: {
+          name: dto.restaurantName,
+          subscriptionPlan: dto.plan ?? 'GROWTH',
+          subscriptionStatus: 'ACTIVE',
+          subscriptionExpiresAt: trialExpiry,
+        },
       });
       const branch = await tx.branch.create({
         data: { restaurantId: restaurant.id, name: dto.branchName },
@@ -109,7 +133,9 @@ export class AuthService {
             label: roleName.replace(/_/g, ' '),
           },
         });
-        if (roleName === 'OWNER') ownerRoleId = role.id;
+        if (roleName === 'OWNER') {
+          ownerRoleId = role.id;
+        }
 
         const grantedKeys = DEFAULT_ROLE_PERMISSIONS[roleName];
         await tx.rolePermission.createMany({
@@ -130,6 +156,7 @@ export class AuthService {
           name: dto.ownerName,
           email: dto.email,
           passwordHash,
+          pinHash,
         },
         include: {
           role: { include: { permissions: { include: { permission: true } } } },
@@ -146,17 +173,11 @@ export class AuthService {
     return this.issueSession(owner);
   }
 
-  async hasAnyRestaurant(): Promise<boolean> {
-    const restaurant = await this.prisma.restaurant.findFirst({
-      select: { id: true },
-    });
-    return restaurant !== null;
-  }
-
   async pinLogin(dto: PinLoginDto) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { id: dto.userId },
       include: {
+        restaurant: true,
         role: { include: { permissions: { include: { permission: true } } } },
       },
     });
@@ -164,10 +185,24 @@ export class AuthService {
     if (!user || !user.isActive || !user.pinHash) {
       throw new UnauthorizedException('PIN login not available for this user');
     }
-    // A 4-8 digit PIN must not be a way around the second factor.
+
+    if (user.restaurant?.subscriptionStatus === 'SUSPENDED') {
+      throw new UnauthorizedException(
+        'LICENSE_SUSPENDED: Your OrderRestro license has been suspended.',
+      );
+    }
+    if (
+      user.restaurant?.subscriptionExpiresAt &&
+      new Date(user.restaurant.subscriptionExpiresAt).getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException(
+        'LICENSE_EXPIRED: Your OrderRestro subscription has expired.',
+      );
+    }
+
     if (user.twoFactorEnabled) {
       throw new UnauthorizedException(
-        'PIN login is off for accounts with two-factor authentication — sign in with your password',
+        'PIN login is off for accounts with two-factor authentication - sign in with your password',
       );
     }
 
@@ -179,11 +214,29 @@ export class AuthService {
     return this.issueSession(user);
   }
 
-  private async issueSession(
-    user: Parameters<AuthService['toSessionUser']>[0],
-  ) {
-    const sessionUser = this.toSessionUser(user);
-    const token = await this.jwt.signAsync({ sub: user.id });
-    return { token, user: sessionUser };
+  issueSession(user: UserWithRole): {
+    token: string;
+    user: SessionUser;
+  } {
+    const payload = {
+      sub: user.id,
+      restaurantId: user.restaurantId,
+      name: user.name,
+      roleId: user.roleId,
+      roleName: user.role.name,
+    };
+    const token = this.jwt.sign(payload);
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        restaurantId: user.restaurantId,
+        name: user.name,
+        roleId: user.roleId,
+        roleName: user.role.name,
+        permissions: user.role.permissions.map((rp) => rp.permission.key),
+      },
+    };
   }
 }

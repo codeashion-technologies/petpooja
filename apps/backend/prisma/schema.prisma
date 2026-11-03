@@ -74,6 +74,11 @@ model Restaurant {
   integrationApiKeys IntegrationApiKey[]
   webhookEndpoints   WebhookEndpoint[]
 
+  // SaaS Subscription and License
+  subscriptionPlan      String    @default("GROWTH")
+  subscriptionStatus    String    @default("ACTIVE")
+  subscriptionExpiresAt DateTime?
+
   @@map("restaurants")
 }
 
@@ -2383,4 +2388,19 @@ model SyncChange {
 
   @@index([tbl, pkKey], map: "sync_changes_row_idx")
   @@map("sync_changes")
+}
+
+model DemoLead {
+  id             String   @id @default(cuid())
+  restaurantName String
+  contactName    String
+  phone          String
+  city           String?
+  interestedPlan String   @default("GROWTH")
+  status         String   @default("NEW")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("demo_leads")
 }

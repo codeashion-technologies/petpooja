@@ -134,7 +134,16 @@ export default function LoginPage() {
               className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
+              <div className="space-y-1">
+                <span>{error.replace(/^(LICENSE_SUSPENDED|LICENSE_EXPIRED):\s*/, "")}</span>
+                {(error.includes("LICENSE_SUSPENDED") || error.includes("LICENSE_EXPIRED")) && (
+                  <div className="pt-1 text-xs font-semibold">
+                    <Link href="/pricing" className="underline hover:text-foreground">
+                      View renewal plans & contact support →
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -144,9 +153,9 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          New restaurant?{" "}
-          <Link href="/signup" className="font-medium text-foreground hover:underline">
-            Create an account
+          Looking for POS plans?{" "}
+          <Link href="/pricing" className="font-medium text-foreground hover:underline">
+            View Plans & Pricing
           </Link>
         </p>
       </motion.div>
