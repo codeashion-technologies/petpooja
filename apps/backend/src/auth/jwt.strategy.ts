@@ -32,12 +32,28 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       include: {
+        restaurant: true,
         role: { include: { permissions: { include: { permission: true } } } },
       },
     });
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Session no longer valid');
+    }
+
+    if (user.restaurant?.subscriptionStatus === 'SUSPENDED') {
+      throw new UnauthorizedException(
+        'LICENSE_SUSPENDED: Your OrderRestro license has been suspended. Please contact support.',
+      );
+    }
+
+    if (
+      user.restaurant?.subscriptionExpiresAt &&
+      new Date(user.restaurant.subscriptionExpiresAt).getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException(
+        'LICENSE_EXPIRED: Your OrderRestro subscription has expired. Please contact support to renew.',
+      );
     }
 
     return {
