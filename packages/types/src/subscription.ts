@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export type PlanTier = "STARTER" | "GROWTH" | "SCALE";
+export type PlanTier = "TRIAL" | "STARTER" | "GROWTH" | "SCALE";
 
 export interface SaasPlan {
   id: PlanTier;
@@ -25,6 +25,35 @@ export interface SaasPlan {
 }
 
 export const SAAS_PLANS: Record<PlanTier, SaasPlan> = {
+  TRIAL: {
+    id: "TRIAL",
+    name: "7-Day Free Trial",
+    tagline: "Test All Pro Features Free on Your Restaurant Counter",
+    badge: "Risk-Free Trial",
+    annualPrice: 0,
+    monthlyPrice: 0,
+    features: [
+      "Full Access to all Growth (Pro) Features",
+      "100% Offline Local Billing (Zero Downtime)",
+      "Kitchen Display System (KDS) Live Order Screens",
+      "Captain Ordering & Real-time Table Floor Map",
+      "Thermal Bill Printing (58mm & 80mm ESC/POS)",
+      "Cash Drawer & Cashier Shift Float Tracking",
+      "Full 7-Day Validity (Auto-Locks on Day 7)",
+      "Zero Credit Card or Payment Required",
+    ],
+    limits: {
+      branches: 1,
+      terminals: "UNLIMITED",
+      reports: "Standard Reports",
+      kds: true,
+      inventory: true,
+      qrOrdering: true,
+      multiBranch: false,
+      kiosk: false,
+      loyalty: false,
+    },
+  },
   STARTER: {
     id: "STARTER",
     name: "Starter (Base)",
@@ -117,7 +146,7 @@ export const SAAS_PLANS: Record<PlanTier, SaasPlan> = {
 };
 
 export const selectPlanSchema = z.object({
-  plan: z.enum(["STARTER", "GROWTH", "SCALE"]).default("STARTER"),
+  plan: z.enum(["TRIAL", "STARTER", "GROWTH", "SCALE"]).default("GROWTH"),
   billingCycle: z.enum(["MONTHLY", "ANNUAL"]).default("ANNUAL"),
 });
 export type SelectPlanDto = z.infer<typeof selectPlanSchema>;

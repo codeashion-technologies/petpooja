@@ -44,7 +44,7 @@ export default function MarketingHomePage() {
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
-  const [interestedPlan, setInterestedPlan] = useState("GROWTH");
+  const [interestedPlan, setInterestedPlan] = useState("TRIAL");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export default function MarketingHomePage() {
     }
   };
 
-  const planKeys: PlanTier[] = ["STARTER", "GROWTH", "SCALE"];
+  const planKeys: PlanTier[] = ["TRIAL", "STARTER", "GROWTH", "SCALE"];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20 selection:text-primary">
@@ -199,7 +199,7 @@ export default function MarketingHomePage() {
         <div className="mx-auto max-w-4xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-6 shadow-sm">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Commercial Restaurant POS · Zero Docker · 100% Offline Resilience</span>
+            <span>Commercial Restaurant POS · Zero Docker · 7-Day Free Trial Available</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground leading-[1.12]">
@@ -214,32 +214,32 @@ export default function MarketingHomePage() {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
-            <a href="#demo" className="w-full sm:w-auto">
+            <a href="#demo" className="w-full sm:w-auto" onClick={() => setInterestedPlan("TRIAL")}>
               <Button size="lg" className="w-full sm:w-auto h-12 px-7 text-sm font-semibold gap-2 bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all">
-                Book a Free Live Demo & Consultation
+                Start 7-Day Free Trial (₹0)
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </a>
             <a href="#pricing" className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 px-6 text-sm font-semibold">
-                Explore Plans (From ₹8,499/yr)
+                Explore Plans (Free Trial to Enterprise)
               </Button>
             </a>
           </div>
 
           {/* Quick value badges */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              7-Day Full Access Free Trial (No Card Required)
+            </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              100% Offline Billing (No Internet Needed)
+              100% Offline Billing (Zero Internet Needed)
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               Zero Docker · Native Windows Portable
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              Supabase Cloud Sync & Backup
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -595,19 +595,23 @@ export default function MarketingHomePage() {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {planKeys.map((key) => {
               const plan = SAAS_PLANS[key];
               const isPopular = plan.isPopular;
-              const price = billingCycle === "ANNUAL" ? plan.annualPrice : plan.monthlyPrice;
-              const priceSuffix = billingCycle === "ANNUAL" ? "/year" : "/month";
+              const isTrial = plan.id === "TRIAL";
+              const price = isTrial ? 0 : (billingCycle === "ANNUAL" ? plan.annualPrice : plan.monthlyPrice);
+              const priceSuffix = isTrial ? "/7 days free" : (billingCycle === "ANNUAL" ? "/year" : "/month");
+              const buttonText = isTrial ? "Start 7-Day Free Trial →" : "Book a Live Demo";
 
               return (
                 <div
                   key={key}
-                  className={`relative flex flex-col rounded-3xl border bg-card p-8 shadow-sm transition-all hover:shadow-xl ${
+                  className={`relative flex flex-col rounded-3xl border bg-card p-6 sm:p-7 shadow-sm transition-all hover:shadow-xl ${
                     isPopular
                       ? "border-primary ring-2 ring-primary/20 scale-[1.02] shadow-lg"
+                      : isTrial
+                      ? "border-emerald-500/40 bg-card ring-1 ring-emerald-500/20"
                       : "border-border"
                   }`}
                 >
@@ -616,17 +620,27 @@ export default function MarketingHomePage() {
                       MOST POPULAR
                     </div>
                   )}
+                  {isTrial && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold text-white shadow">
+                      TEST DRIVE FREE
+                    </div>
+                  )}
 
                   <div className="mb-6">
-                    <h4 className="text-xl font-bold text-foreground">{plan.name}</h4>
-                    <p className="mt-1 text-xs text-muted-foreground">{plan.tagline}</p>
+                    <h4 className="text-lg sm:text-xl font-bold text-foreground">{plan.name}</h4>
+                    <p className="mt-1 text-xs text-muted-foreground min-h-[32px]">{plan.tagline}</p>
                     <div className="mt-5 flex items-baseline">
-                      <span className="text-4xl font-extrabold tracking-tight">₹{price.toLocaleString()}</span>
+                      <span className="text-3xl sm:text-4xl font-extrabold tracking-tight">₹{price.toLocaleString()}</span>
                       <span className="ml-1 text-xs text-muted-foreground font-medium">{priceSuffix}</span>
                     </div>
-                    {billingCycle === "ANNUAL" && (
+                    {billingCycle === "ANNUAL" && !isTrial && (
                       <span className="mt-1 block text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
                         Billed annually (Best Value)
+                      </span>
+                    )}
+                    {isTrial && (
+                      <span className="mt-1 block text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                        Zero credit card required
                       </span>
                     )}
                   </div>
@@ -640,10 +654,12 @@ export default function MarketingHomePage() {
                       className={`w-full h-11 font-semibold ${
                         isPopular
                           ? "bg-primary text-primary-foreground shadow-sm"
+                          : isTrial
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                           : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                       }`}
                     >
-                      Book a Live Demo
+                      {buttonText}
                     </Button>
                   </a>
 
@@ -673,15 +689,15 @@ export default function MarketingHomePage() {
           <div className="rounded-3xl border border-border bg-card p-8 sm:p-12 shadow-xl">
             <div className="text-center max-w-2xl mx-auto mb-10">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-semibold text-primary mb-3">
-                <PhoneCall className="h-3.5 w-3.5" />
-                <span>Personalized Onboarding & Live Walkthrough</span>
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Onboarding Walkthrough & 7-Day Free Trial</span>
               </div>
               <h3 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                Book a Live Demo & Free Consultation
+                Request 7-Day Free Trial or Live Demo
               </h3>
               <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                See OrderRestro in action on your screen. Our restaurant specialist will demonstrate
-                offline billing, KDS routing, and thermal printer setup.
+                Test-drive OrderRestro on your restaurant counter free for 7 days.
+                No credit card required. Our team will issue your trial credentials right away.
               </p>
             </div>
 
@@ -691,12 +707,12 @@ export default function MarketingHomePage() {
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
                 <h4 className="text-xl font-bold text-foreground">
-                  Demo Request Received!
+                  Request Received Successfully!
                 </h4>
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
-                  Thank you, <strong>{contactName}</strong>! Our product specialist will call or WhatsApp
+                  Thank you, <strong>{contactName}</strong>! Our onboarding team will WhatsApp
                   you at <span className="font-mono font-bold text-foreground">{phone}</span> shortly
-                  to schedule your personalized live demo for <strong>{restaurantName}</strong>.
+                  with your <strong>OrderRestro POS</strong> credentials for <strong>{restaurantName}</strong>.
                 </p>
                 <Button
                   variant="outline"
@@ -770,12 +786,13 @@ export default function MarketingHomePage() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold mb-1 text-foreground">Interested Plan</label>
+                    <label className="block font-semibold mb-1 text-foreground">Interested Plan / Trial</label>
                     <select
                       value={interestedPlan}
                       onChange={(e) => setInterestedPlan(e.target.value)}
                       className="w-full rounded-xl border border-input bg-background px-4 py-3 text-xs sm:text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
+                      <option value="TRIAL">🎁 7-Day Free Trial (₹0 - Full Pro Features)</option>
                       <option value="STARTER">Starter Plan (₹8,499/yr)</option>
                       <option value="GROWTH">Growth Plan (₹14,499/yr) [Popular]</option>
                       <option value="SCALE">Scale Plan (₹21,999/yr)</option>
@@ -789,7 +806,11 @@ export default function MarketingHomePage() {
                     disabled={isSubmitting}
                     className="w-full h-12 text-sm font-bold bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all"
                   >
-                    {isSubmitting ? "Submitting Demo Request..." : "Schedule My Free Live Demo →"}
+                    {isSubmitting
+                      ? "Submitting Request..."
+                      : interestedPlan === "TRIAL"
+                      ? "Request 7-Day Free Trial Credentials →"
+                      : "Schedule My Free Live Demo →"}
                   </Button>
                 </div>
 

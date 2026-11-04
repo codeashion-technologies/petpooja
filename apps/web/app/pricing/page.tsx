@@ -34,7 +34,7 @@ export default function PricingPage() {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
 
-  const planKeys: PlanTier[] = ["STARTER", "GROWTH", "SCALE"];
+  const planKeys: PlanTier[] = ["TRIAL", "STARTER", "GROWTH", "SCALE"];
 
   const handleBookDemo = (planName: string) => {
     setSelectedPlanForDemo(planName);
@@ -90,11 +90,13 @@ export default function PricingPage() {
                 Sign in
               </Button>
             </Link>
-            <Link href="/signup">
-              <Button size="sm" className="bg-primary text-primary-foreground font-medium">
-                Start Free Trial
-              </Button>
-            </Link>
+            <Button
+              size="sm"
+              onClick={() => handleBookDemo("7-Day Free Trial")}
+              className="bg-primary text-primary-foreground font-medium"
+            >
+              Start Free Trial
+            </Button>
           </div>
         </div>
       </header>
@@ -152,24 +154,33 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-6 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
           {planKeys.map((key) => {
             const plan = SAAS_PLANS[key];
             const isPopular = plan.isPopular;
-            const price = billingCycle === "ANNUAL" ? plan.annualPrice : plan.monthlyPrice;
-            const periodLabel = billingCycle === "ANNUAL" ? "/year" : "/month";
+            const isTrial = key === "TRIAL";
+            const price = isTrial ? 0 : (billingCycle === "ANNUAL" ? plan.annualPrice : plan.monthlyPrice);
+            const periodLabel = isTrial ? "/7 days free" : (billingCycle === "ANNUAL" ? "/year" : "/month");
 
             return (
               <div
                 key={key}
-                className={`relative flex flex-col rounded-2xl border p-6 sm:p-8 transition-all ${
+                className={`relative flex flex-col rounded-2xl border p-6 transition-all ${
                   isPopular
                     ? "border-primary bg-card shadow-xl ring-2 ring-primary/20 scale-[1.02] md:-translate-y-2"
+                    : isTrial
+                    ? "border-emerald-500/40 bg-card ring-1 ring-emerald-500/20 shadow-md"
                     : "border-border bg-card/60 hover:border-border/80"
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow">
+                  <div
+                    className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider shadow ${
+                      isTrial
+                        ? "bg-emerald-600 text-white"
+                        : "bg-primary text-primary-foreground"
+                    }`}
+                  >
                     {plan.badge}
                   </div>
                 )}
@@ -177,6 +188,7 @@ export default function PricingPage() {
                 <div className="mb-5">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-foreground">{plan.name}</h2>
+                    {key === "TRIAL" && <Sparkles className="h-5 w-5 text-emerald-500" />}
                     {key === "STARTER" && <Store className="h-5 w-5 text-muted-foreground" />}
                     {key === "GROWTH" && <Zap className="h-5 w-5 text-amber-500" />}
                     {key === "SCALE" && <Building2 className="h-5 w-5 text-primary" />}
@@ -190,9 +202,14 @@ export default function PricingPage() {
                     ₹{price.toLocaleString("en-IN")}
                   </span>
                   <span className="text-xs text-muted-foreground font-medium">{periodLabel}</span>
-                  {billingCycle === "ANNUAL" && (
+                  {billingCycle === "ANNUAL" && !isTrial && (
                     <span className="ml-auto text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
                       ₹{Math.round(plan.annualPrice / 12)}/mo
+                    </span>
+                  )}
+                  {isTrial && (
+                    <span className="ml-auto text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
+                      No card needed
                     </span>
                   )}
                 </div>
@@ -211,18 +228,28 @@ export default function PricingPage() {
 
                 {/* CTA Buttons */}
                 <div className="space-y-2 mt-auto">
-                  <Link href={`/signup?plan=${key}`} className="block w-full">
+                  {isTrial ? (
                     <Button
-                      className={`w-full h-11 text-sm font-semibold ${
-                        isPopular
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                      }`}
+                      onClick={() => handleBookDemo(plan.name)}
+                      className="w-full h-11 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                     >
-                      Get Started with {plan.name}
+                      Request 7-Day Free Trial
                       <ArrowRight className="ml-1.5 h-4 w-4" />
                     </Button>
-                  </Link>
+                  ) : (
+                    <Link href={`/signup?plan=${key}`} className="block w-full">
+                      <Button
+                        className={`w-full h-11 text-sm font-semibold ${
+                          isPopular
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        }`}
+                      >
+                        Get Started with {plan.name}
+                        <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -408,9 +435,13 @@ export default function PricingPage() {
                 <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
                   <Check className="h-6 w-6" />
                 </div>
-                <h4 className="font-semibold text-base">Request Received!</h4>
+                <h4 className="font-semibold text-base">
+                  {selectedPlanForDemo.includes("Trial") ? "Free Trial Request Received!" : "Demo Request Received!"}
+                </h4>
                 <p className="text-xs text-muted-foreground">
-                  Our restaurant onboarding team will reach out within 2 business hours for your {selectedPlanForDemo} demo.
+                  {selectedPlanForDemo.includes("Trial")
+                    ? "Our onboarding team will contact you on WhatsApp with your 7-Day Free Trial credentials shortly."
+                    : `Our restaurant onboarding team will reach out within 2 business hours for your ${selectedPlanForDemo} demo.`}
                 </p>
                 <Button className="mt-4" onClick={() => setDemoModalOpen(false)}>
                   Done
@@ -479,7 +510,11 @@ export default function PricingPage() {
                     disabled={demoSubmitting}
                     className="flex-1 bg-primary text-primary-foreground"
                   >
-                    {demoSubmitting ? "Submitting..." : "Request Demo"}
+                    {demoSubmitting
+                      ? "Submitting..."
+                      : selectedPlanForDemo.includes("Trial")
+                      ? "Request 7-Day Free Trial"
+                      : "Request Demo"}
                   </Button>
                 </div>
               </form>

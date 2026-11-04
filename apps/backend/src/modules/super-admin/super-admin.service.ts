@@ -154,7 +154,8 @@ export class SuperAdminService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const pinHash = await bcrypt.hash('1234', 12);
 
-    const expiryDate = new Date(Date.now() + (dto.validityDays || 365) * 24 * 60 * 60 * 1000);
+    const days = dto.validityDays || (dto.plan === 'TRIAL' ? 7 : 365);
+    const expiryDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
     return this.prisma.$transaction(async (tx) => {
       const restaurant = await tx.restaurant.create({

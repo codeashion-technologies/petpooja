@@ -236,8 +236,19 @@ export default function SuperAdminPage() {
     setNewOwnerName(lead.contactName);
     setNewOwnerEmail(`${lead.restaurantName.toLowerCase().replace(/[^a-z0-9]/g, "")}@example.com`);
     setNewPassword("Password123!");
-    setNewPlan(lead.interestedPlan || "GROWTH");
-    setNewValidityDays(365);
+    const isTrial =
+      lead.interestedPlan === "TRIAL" ||
+      Boolean(lead.interestedPlan?.toLowerCase().includes("trial"));
+    setNewPlan(
+      isTrial
+        ? "TRIAL"
+        : lead.interestedPlan === "STARTER" ||
+          lead.interestedPlan === "GROWTH" ||
+          lead.interestedPlan === "SCALE"
+        ? lead.interestedPlan
+        : "GROWTH"
+    );
+    setNewValidityDays(isTrial ? 7 : 365);
     setOnboardSuccess(null);
     setOnboardError(null);
     setShowAddRestaurantModal(true);
@@ -411,17 +422,18 @@ export default function SuperAdminPage() {
     });
   }, [restaurants, restaurantSearch]);
 
-  const formatDaysLeft = (dateStr: string | null) => {
+  const formatDaysLeft = (dateStr: string | null, plan?: string) => {
     if (!dateStr) return { text: "Lifetime Access", isExpired: false, badgeVariant: "default" as const };
     const diffMs = new Date(dateStr).getTime() - Date.now();
     const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const prefix = plan === "TRIAL" ? "Trial: " : "";
     if (days < 0) {
-      return { text: `Expired ${Math.abs(days)}d ago`, isExpired: true, badgeVariant: "destructive" as const };
+      return { text: `${plan === "TRIAL" ? "Trial Expired" : "Expired"} ${Math.abs(days)}d ago`, isExpired: true, badgeVariant: "destructive" as const };
     }
     if (days <= 14) {
-      return { text: `${days} days left (Expiring soon)`, isExpired: false, badgeVariant: "outline" as const };
+      return { text: `${prefix}${days} days left (Expiring soon)`, isExpired: false, badgeVariant: "outline" as const };
     }
-    return { text: `${days} days left`, isExpired: false, badgeVariant: "secondary" as const };
+    return { text: `${prefix}${days} days left`, isExpired: false, badgeVariant: "secondary" as const };
   };
 
   // 1. PIN Gate Screen
@@ -742,9 +754,17 @@ export default function SuperAdminPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <span className="inline-flex rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                {lead.interestedPlan}
-                              </span>
+                              {lead.interestedPlan === "TRIAL" ||
+                              lead.interestedPlan?.toLowerCase().includes("trial") ? (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                  <Sparkles className="h-3 w-3" />
+                                  7-DAY TRIAL
+                                </span>
+                              ) : (
+                                <span className="inline-flex rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                  {lead.interestedPlan}
+                                </span>
+                              )}
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
@@ -845,7 +865,7 @@ export default function SuperAdminPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {filteredRestaurants.map((restaurant) => {
-                      const validity = formatDaysLeft(restaurant.subscriptionExpiresAt);
+                      const validity = formatDaysLeft(restaurant.subscriptionExpiresAt, restaurant.subscriptionPlan);
                       const isSuspended = restaurant.subscriptionStatus === "SUSPENDED";
 
                       return (
@@ -867,9 +887,15 @@ export default function SuperAdminPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
-                              {restaurant.subscriptionPlan}
-                            </span>
+                            {restaurant.subscriptionPlan === "TRIAL" ? (
+                              <span className="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                7-DAY TRIAL
+                              </span>
+                            ) : (
+                              <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                                {restaurant.subscriptionPlan}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <button
@@ -1103,9 +1129,14 @@ export default function SuperAdminPage() {
                     <Label className="text-xs">Subscription Plan</Label>
                     <select
                       value={newPlan}
-                      onChange={(e) => setNewPlan(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewPlan(val);
+                        if (val === "TRIAL") setNewValidityDays(7);
+                      }}
                       className="w-full h-9 mt-1 rounded-md border border-input bg-background px-3 text-xs"
                     >
+                      <option value="TRIAL">7-Day Free Trial (₹0)</option>
                       <option value="STARTER">Starter (Base) - ₹8,499</option>
                       <option value="GROWTH">Growth (Pro) - ₹14,499</option>
                       <option value="SCALE">Scale (Enterprise) - ₹21,999</option>
@@ -1119,7 +1150,8 @@ export default function SuperAdminPage() {
                       onChange={(e) => setNewValidityDays(Number(e.target.value))}
                       className="w-full h-9 mt-1 rounded-md border border-input bg-background px-3 text-xs"
                     >
-                      <option value={14}>14 Days (Free Trial)</option>
+                      <option value={7}>7 Days (Free Trial)</option>
+                      <option value={14}>14 Days (Extended Trial)</option>
                       <option value={30}>1 Month (30 Days)</option>
                       <option value={90}>3 Months (90 Days)</option>
                       <option value={180}>6 Months (180 Days)</option>
@@ -1173,6 +1205,7 @@ export default function SuperAdminPage() {
                   <option value="STARTER">Starter Plan (₹8,499)</option>
                   <option value="GROWTH">Growth Plan (₹14,499)</option>
                   <option value="SCALE">Scale Plan (₹21,999)</option>
+                  <option value="TRIAL">7-Day Free Trial (₹0)</option>
                 </select>
               </div>
 
@@ -1183,6 +1216,7 @@ export default function SuperAdminPage() {
                   onChange={(e) => setRenewDays(Number(e.target.value))}
                   className="w-full h-9 mt-1 rounded-md border border-input bg-background px-3 text-xs"
                 >
+                  <option value={7}>+ 7 Days (Trial Extension)</option>
                   <option value={30}>+ 30 Days (1 Month)</option>
                   <option value={90}>+ 90 Days (3 Months)</option>
                   <option value={180}>+ 180 Days (6 Months)</option>
