@@ -6,7 +6,11 @@ import type { NextConfig } from "next";
 // cookie fragility that broke that app's very first version. NOTE: Next
 // bakes the rewrite destination at build time, so in Docker this must come
 // from a build ARG, not a runtime env var (see nodedr-pos memory).
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
+const rawBackendUrl = (process.env.BACKEND_URL ?? "http://localhost:4000").trim();
+const BACKEND_URL =
+  rawBackendUrl.startsWith("http://") || rawBackendUrl.startsWith("https://")
+    ? rawBackendUrl
+    : `https://${rawBackendUrl}`;
 
 const nextConfig: NextConfig = {
   output: "standalone",
