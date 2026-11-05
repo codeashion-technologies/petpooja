@@ -7,10 +7,12 @@ import type { NextConfig } from "next";
 // bakes the rewrite destination at build time, so in Docker this must come
 // from a build ARG, not a runtime env var (see nodedr-pos memory).
 const rawBackendUrl = (process.env.BACKEND_URL ?? "http://localhost:4000").trim();
-const BACKEND_URL =
-  rawBackendUrl.startsWith("http://") || rawBackendUrl.startsWith("https://")
-    ? rawBackendUrl
-    : `https://${rawBackendUrl}`;
+let BACKEND_URL = rawBackendUrl;
+if (!BACKEND_URL.startsWith("http://") && !BACKEND_URL.startsWith("https://")) {
+  BACKEND_URL = BACKEND_URL.includes(".")
+    ? `https://${BACKEND_URL}`
+    : `http://${BACKEND_URL}:10000`;
+}
 
 const nextConfig: NextConfig = {
   output: "standalone",
