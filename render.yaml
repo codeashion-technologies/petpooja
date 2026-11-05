@@ -1,0 +1,48 @@
+services:
+  # 1. Backend API (NestJS)
+  - type: web
+    name: orderrestro-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nodedr-restaurant/types build && pnpm --filter @nodedr-restaurant/backend build
+    startCommand: node apps/backend/dist/src/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        value: postgresql://postgres.iadwsjwscxvluzmvsubb:P1iolVHfU6WVgmXH@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 12h
+      - key: COOKIE_SECURE
+        value: true
+      - key: UPLOADS_DIR
+        value: ./uploads
+      - key: SUPER_ADMIN_PIN
+        value: admin123
+
+  # 2. Frontend Web App (Next.js)
+  - type: web
+    name: orderrestro-web
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nodedr-restaurant/types build && pnpm --filter web build
+    startCommand: node apps/web/.next/standalone/apps/web/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: orderrestro-api
+          property: host
+

@@ -65,7 +65,7 @@ function resolveJwtSecret(): string {
   const envSecret = (process.env.JWT_SECRET ?? '').trim();
   if (isUsableSecret(envSecret)) {
     return envSecret;
-  }
+  }   
 
   try {
     if (existsSync(JWT_SECRET_STATE_FILE)) {
