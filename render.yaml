@@ -6,7 +6,7 @@ services:
     plan: free
     region: singapore
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @nodedr-restaurant/types build && pnpm --filter @nodedr-restaurant/backend build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nodedr-restaurant/types build && pnpm --filter @nodedr-restaurant/backend build
     startCommand: node apps/backend/dist/src/main.js
     envVars:
       - key: NODE_ENV
@@ -33,7 +33,7 @@ services:
     plan: free
     region: singapore
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @nodedr-restaurant/types build && pnpm --filter web build && cp -r apps/web/public apps/web/.next/standalone/apps/web/ && mkdir -p apps/web/.next/standalone/apps/web/.next && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @nodedr-restaurant/types build && pnpm --filter web build && cp -r apps/web/public apps/web/.next/standalone/apps/web/ && mkdir -p apps/web/.next/standalone/apps/web/.next && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
     startCommand: node apps/web/.next/standalone/apps/web/server.js
     envVars:
       - key: NODE_ENV
