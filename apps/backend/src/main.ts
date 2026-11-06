@@ -132,10 +132,10 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
   }
 
-  const port = process.env.PORT ?? 4000;
-  await app.listen(port);
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
+  await app.listen(port, '0.0.0.0');
   console.log(
-    `Nodedr OrderRestro API listening on :${port} (docs at /api/docs)`,
+    `Nodedr OrderRestro API listening on http://0.0.0.0:${port} (docs at /api/docs)`,
   );
 }
 void bootstrap();
