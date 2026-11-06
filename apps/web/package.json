@@ -8,6 +8,8 @@
     "dev": "next dev",
     "prebuild": "pnpm --filter @nodedr-restaurant/types build",
     "build": "next build",
+    "build:worker": "opennextjs-cloudflare build",
+    "deploy:worker": "opennextjs-cloudflare deploy",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",

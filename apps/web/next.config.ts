@@ -15,7 +15,7 @@ if (!BACKEND_URL.startsWith("http://") && !BACKEND_URL.startsWith("https://")) {
 }
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.OPEN_NEXT ? {} : { output: "standalone" }),
   // socket.io's endpoint is literally "/socket.io/" — the backend 404s on the
   // slash-less form, so Next must not redirect it.
   skipTrailingSlashRedirect: true,
