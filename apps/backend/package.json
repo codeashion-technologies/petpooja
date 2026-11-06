@@ -6,6 +6,7 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "scripts": {
+    "prebuild": "pnpm --filter @nodedr-restaurant/types build && prisma generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

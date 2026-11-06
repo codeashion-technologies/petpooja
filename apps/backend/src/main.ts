@@ -13,7 +13,7 @@ import { uploadsDir } from './common/upload/image-upload.config';
 // .env.example, docker-compose.yml, and the CasaOS/ZimaOS app-store
 // manifest (casaos/docker-compose.yml) — that manifest hardcodes a literal
 // default value (CasaOS app-store installers pre-fill it and many
-// non-technical self-hosters click through without changing it) rather
+// non-technical self-hosters click through without changing it) rather/*  */
 // than failing loudly the way `${JWT_SECRET:?...}` does in the main
 // docker-compose.yml. This is a defense-in-depth backstop that applies to
 // every deployment path, not just CasaOS: refuse to issue/verify sessions

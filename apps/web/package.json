@@ -6,6 +6,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "pnpm --filter @nodedr-restaurant/types build",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
