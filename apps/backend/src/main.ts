@@ -23,7 +23,7 @@ const KNOWN_PLACEHOLDER_JWT_SECRETS = new Set([
   'please-change-this-to-a-long-random-string',
   'change-me-to-a-long-random-string',
   'change-me',
-  'changeme',
+  'changeme', 
   'secret',
   'your-secret-here',
 ]);
