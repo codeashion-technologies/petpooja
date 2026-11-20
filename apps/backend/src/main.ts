@@ -23,7 +23,7 @@ const KNOWN_PLACEHOLDER_JWT_SECRETS = new Set([
   'please-change-this-to-a-long-random-string',
   'change-me-to-a-long-random-string',
   'change-me',
-  'changeme', 
+  'changeme',
   'secret',
   'your-secret-here',
 ]);
@@ -65,7 +65,7 @@ function resolveJwtSecret(): string {
   const envSecret = (process.env.JWT_SECRET ?? '').trim();
   if (isUsableSecret(envSecret)) {
     return envSecret;
-  }   
+  }
 
   try {
     if (existsSync(JWT_SECRET_STATE_FILE)) {
@@ -79,15 +79,15 @@ function resolveJwtSecret(): string {
     writeFileSync(JWT_SECRET_STATE_FILE, generated, { mode: 0o600 });
     console.warn(
       `JWT_SECRET was not set (or was a known placeholder) — generated a random one and saved it to ${JWT_SECRET_STATE_FILE}. ` +
-        'It will be reused on every restart, so existing sessions stay valid. Set JWT_SECRET explicitly instead if you manage this deployment by hand.',
+      'It will be reused on every restart, so existing sessions stay valid. Set JWT_SECRET explicitly instead if you manage this deployment by hand.',
     );
     return generated;
   } catch (err) {
     console.error(
       `Refusing to start: JWT_SECRET is missing, a known placeholder value, or shorter than ${MIN_JWT_SECRET_LENGTH} characters, ` +
-        `and a random one could not be generated/persisted at ${JWT_SECRET_STATE_FILE}: ${err instanceof Error ? err.message : String(err)}. ` +
-        'Set a real, unique, random JWT_SECRET (e.g. `openssl rand -hex 32`) before starting the backend — ' +
-        'this protects every session this server will ever issue.',
+      `and a random one could not be generated/persisted at ${JWT_SECRET_STATE_FILE}: ${err instanceof Error ? err.message : String(err)}. ` +
+      'Set a real, unique, random JWT_SECRET (e.g. `openssl rand -hex 32`) before starting the backend — ' +
+      'this protects every session this server will ever issue.',
     );
     process.exit(1);
   }
